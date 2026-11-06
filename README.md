@@ -108,59 +108,9 @@
 
 차량 신호는 하나의 공급원(`VehicleSignalSource`)으로 모이고, 판정은 화면과 분리된 엔진이 한다. 깜빡이 누락 판정은 집중잔량과 같은 코드를 쓴다. 시연용 데이터와 실제 Pleos SDK를 같은 인터페이스로 바꿔 끼우므로 엔진과 화면은 그대로 쓴다. 점선은 아직 연결 전인 부분이다.
 
-```mermaid
-flowchart LR
-  subgraph IN["차량 입력 (Pleos Connect)"]
-    direction TB
-    VSDK["Vehicle SDK<br/>TurnSignal · Door · Telltales · Light"]
-    NAVI["NaviHelper SDK<br/>onTBTInfo · onReRouteEnded"]
-    CPM["CarPropertyManager<br/>기어 · 주차 브레이크 · 차속"]
-    CENTER["공공데이터포털<br/>전국치매센터표준데이터"]
-  end
+<img src="docs/architecture.png" width="100%" alt="시스템 구조도: 차량 입력, 신호 공급원, 판정 엔진, 화면, 차량 출력">
 
-  subgraph APP["오래운전 앱"]
-    direction LR
-    subgraph SRCG["신호 공급원"]
-      direction TB
-      PLEOS["PleosSignalSource<br/>(연결 예정)"]
-      DEMO["DemoSignalSource<br/>첫 4주 · 7주째 시연 기록"]
-      SRC["VehicleSignalSource"]
-    end
-    subgraph ENG["engine/ · 테스트 23개"]
-      direction TB
-      DET["MissedTurnSignalDetector<br/>깜빡이 누락 (집중잔량과 공유)"]
-      BASE["Baseline<br/>처음 4주 = 평소 · 변화 판정"]
-      NEXT["NextStepAdvisor<br/>만 60세 이상 무료 검사 안내"]
-      WAND["WanderingDetector<br/>늘 다니던 길에서 재탐색 2번"]
-      COND["ConditionAdvisor · ConditionRecord<br/>함께 정한 조건 적용 · 지킨 기록"]
-      DB[("차 안 저장소 (예정)<br/>공유는 본인이 켤 때만")]
-    end
-    UI["ui/ · Jetpack Compose<br/>출발 인사 · 주행 · 주차<br/>변화 안내 · 가족과 같이 보기"]
-  end
-
-  subgraph OUT["차량 출력"]
-    direction TB
-    ROUTE["NaviHelper<br/>휴게소 경유지 · 집 안내<br/>센터 길 안내"]
-    VOICE["STT · TTS<br/>출발 인사 · 깜빡이 알림"]
-  end
-
-  VSDK -.-> PLEOS
-  NAVI -.-> PLEOS
-  CPM -.-> PLEOS
-  PLEOS -.-> SRC
-  DEMO --> SRC
-  SRC -- DriveSignal --> DET --> BASE --> NEXT
-  SRC --> WAND
-  SRC --> COND
-  CENTER -.-> NEXT
-  BASE -.- DB
-  NEXT --> UI
-  BASE --> UI
-  WAND --> UI
-  COND --> UI
-  UI -.-> ROUTE
-  UI -.-> VOICE
-```
+<sub>diagrams.net으로 그렸다. 원본 <a href="docs/architecture.drawio">docs/architecture.drawio</a>는 <a href="https://app.diagrams.net">app.diagrams.net</a>에서 파일 › 열기로 바로 고칠 수 있다.</sub>
 
 ### 변화는 이렇게 알린다
 

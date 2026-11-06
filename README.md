@@ -1,23 +1,80 @@
+<div align="center">
+
 # 오래운전
 
 **부모님 차가 먼저 알아채는 운전 컨디션 변화.**
-고령 운전자를 위한 Pleos Connect 차량 앱. 차량 신호로 깜빡이 누락 같은 "깜빡함"의 변화를 본인 기준으로 알아채고, 본인이 동의한 가족과 함께 어떤 조건에서 계속 운전할지 정하고 지키도록 돕는다.
 
-> 2026 현대자동차그룹 차량용 앱 개발 공모전 "Code your App into Pleos App Market" 출품작, 팀 봇듀
+고령 운전자를 위한 Pleos Connect 차량 앱
 
-**[시연 영상 보기 (70초)](docs/demo.mp4)** · [APK 받기](apk/봇듀_오래운전_release.apk) · [개발일지](docs/개발일지.md)
+![Pleos Connect](https://img.shields.io/badge/Pleos_Connect-AAOS-002C5F?style=flat-square)
+![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
+![Tests](https://img.shields.io/badge/엔진_테스트-23개_통과-00AAD2?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.3.0-A36B4F?style=flat-square)
 
-<p>
-<img src="docs/screens/1_greeting.png" width="150" alt="출발 인사">
-<img src="docs/screens/4_change.png" width="150" alt="변화 안내">
-<img src="docs/screens/6_advice.png" width="150" alt="해 진 뒤 먼 곳 출발 제안">
-<img src="docs/screens/7_wandering.png" width="150" alt="길 헤맴 감지">
-<img src="docs/screens/8_next_step.png" width="150" alt="가까운 치매안심센터 무료 검사 안내">
-</p>
-<img src="docs/screens/5_family.png" width="760" alt="가족과 같이 보기 (가로 2칸)">
-<img src="docs/screens/9_kept.png" width="760" alt="함께 정한 조건을 지킨 기록 (가로 2칸)">
+<img src="docs/mockups/5_family.jpg" width="100%" alt="가족과 같이 보기 화면이 계기판과 이어진 중앙 디스플레이에 떠 있는 모습">
 
-<sub>Pleos Connect 앱 창 크기(세로 1칸 920×1330, 가로 2칸 1870×1330)로 맞춘 에뮬레이터에서 찍은 실제 실행 화면</sub>
+[**시연 영상 (70초)**](docs/demo.mp4) · [APK 받기](apk/봇듀_오래운전_release.apk) · [개발일지](docs/개발일지.md) · [시스템 구조](#시스템-구조)
+
+</div>
+
+> [!NOTE]
+> 2026 현대자동차그룹 차량용 앱 개발 공모전 "Code your App into Pleos App Market" 출품작, 팀 봇듀.
+> 차량 신호는 아직 시연용 주행 데이터로 재생한다. Pleos SDK 콜백 연결은 [현재 상태](#현재-상태)에 적었다.
+
+## 한눈에 보기
+
+| | |
+| --- | --- |
+| 누구를 위해 | 계속 운전해야 하는 고령 운전자와, 함께 살피고 싶은 가족 |
+| 무엇을 보나 | 내비 회전 안내 대비 깜빡이 누락, 늘 다니던 길에서의 경로 재탐색 |
+| 무엇을 해 주나 | 처음 4주를 평소로 삼아 달라졌을 때만 본인에게 먼저 알리고, 가족과 함께 정한 운전 조건이 출발할 때 작동한다 |
+| 무엇을 하지 않나 | 진단·점수·운전 금지. 제안만 하고 고르는 건 운전자 본인 |
+| 데이터 | 차 안에만 저장. 가족 공유는 본인이 켰을 때만 |
+
+## 차 안에서 이렇게 보인다
+
+<table>
+<tr>
+<td width="50%"><img src="docs/mockups/1_greeting.jpg" alt="출발 인사"></td>
+<td width="50%"><img src="docs/mockups/2_driving.jpg" alt="주행 중 깜빡이 알림"></td>
+</tr>
+<tr>
+<td><b>출발 인사</b><br>시동을 걸면 "오늘 어디 가세요?" 자주 가는 곳을 크게 보여준다</td>
+<td><b>주행 중</b><br>본인이 수락하면 회전 200m 앞에서 "오른쪽 깜빡이를 켜 주세요"</td>
+</tr>
+<tr>
+<td><img src="docs/mockups/4_change.jpg" alt="변화 안내"></td>
+<td><img src="docs/mockups/8_next_step.jpg" alt="다음 할 일, 무료 검사 안내"></td>
+</tr>
+<tr>
+<td><b>변화 안내</b><br>평소보다 자주 놓치면 본인에게 먼저. 칸 하나가 회전 한 번, 빈 칸이 놓친 회전</td>
+<td><b>다음 할 일</b><br>만 60세 이상이면 가까운 치매안심센터 무료 검사와 길 안내를 열어 둔다</td>
+</tr>
+<tr>
+<td><img src="docs/mockups/6_advice.jpg" alt="해 진 뒤 먼 곳 출발 제안"></td>
+<td><img src="docs/mockups/7_wandering.jpg" alt="길 헤맴 감지"></td>
+</tr>
+<tr>
+<td><b>함께 정한 조건이 작동</b><br>해 진 뒤 먼 곳이면 "내일 낮에 가실까요?" 막지 않고 제안만</td>
+<td><b>길 헤맴 감지</b><br>늘 다니던 길에서 경로를 몇 번 다시 찾으면 "집으로 안내해 드릴까요?"</td>
+</tr>
+<tr>
+<td><img src="docs/mockups/3_parked.jpg" alt="주차 후 이번 주 카드"></td>
+<td><img src="docs/mockups/9_kept.jpg" alt="조건 지킨 기록 가로 2칸"></td>
+</tr>
+<tr>
+<td><b>도착하면</b><br>이번 주 회전 기록을 한 장으로</td>
+<td><b>조건 지킨 기록</b> (가로 2칸)<br>"2번 중 1번 낮에 가셨어요" 탓하지 않고 횟수만</td>
+</tr>
+</table>
+
+<sub>앱 화면은 Pleos Connect 앱 창 크기(세로 1칸 920×1330, 가로 2칸 1870×1330) 에뮬레이터에서 찍은 실제 실행 화면이다. 둘레의 운전석과 계기판은 설명을 위해 그린 가상 목업이다.</sub>
+
+<details>
+<summary><b>시연 영상 미리보기 (GIF, 18초)</b></summary>
+<br>
+<a href="docs/demo.mp4"><img src="docs/demo-preview.gif" width="100%" alt="시연 영상 미리보기"></a>
+</details>
 
 ## 왜 만들었나
 
@@ -44,20 +101,89 @@
 
 칸 하나가 회전 한 번이다. 채운 남색 칸은 깜빡이를 켠 회전, 금색 테두리만 있는 빈 칸은 놓친 회전이다. 색과 모양 둘 다로 구분된다.
 
-**왜 휴대폰이 아니라 차여야 하나**: 방향지시등, 기어, 문, 경고등 신호는 차 안에서만 정확히 얻을 수 있고, 내비 회전 안내와 실제 조작을 같은 시각에 맞춰 볼 수 있는 곳은 차량 OS뿐이다. 단말기를 달거나 휴대폰을 켤 필요 없이 시동만 걸면 동작한다.
+> [!TIP]
+> **왜 휴대폰이 아니라 차여야 하나.** 방향지시등, 기어, 문, 경고등 신호는 차 안에서만 정확히 얻을 수 있고, 내비 회전 안내와 실제 조작을 같은 시각에 맞춰 볼 수 있는 곳은 차량 OS뿐이다. 단말기를 달거나 휴대폰을 켤 필요 없이 시동만 걸면 동작한다.
 
-## 판정 규칙
+## 시스템 구조
 
-판정은 화면과 분리된 엔진(`app/src/main/java/com/botdue/orae/engine/`)이 한다. 모든 규칙에 단위 테스트가 있다.
+차량 신호는 하나의 공급원(`VehicleSignalSource`)으로 모이고, 판정은 화면과 분리된 엔진이 한다. 깜빡이 누락 판정은 집중잔량과 같은 코드를 쓴다. 시연용 데이터와 실제 Pleos SDK를 같은 인터페이스로 바꿔 끼우므로 엔진과 화면은 그대로 쓴다. 점선은 아직 연결 전인 부분이다.
 
-1. **깜빡이 누락**: 내비가 회전을 안내하고(`NaviHelper onTBTInfo`) 90초 안에 같은 방향으로 회전했을 때, 회전 직전 10초 안에 같은 방향 깜빡이(`Vehicle TurnSignal`)가 켜지지 않았으면 놓침. 안내 없는 회전은 판정하지 않는다.
-2. **나만의 기준선**: 처음 4주 기록이 평소. 남과 비교하거나 점수로 판정하지 않는다.
-3. **변화**: 최근 3주가 모두 평소보다 높고, 지난주가 평소보다 10%p 이상 높을 때만 알린다. 한 주만 튀는 것은 변화로 보지 않는다.
-4. **조건 적용**: "해 진 뒤에는 가까운 곳만"이면 18~6시에 10km가 넘는 출발에 낮에 가기를 제안한다. "고속도로는 휴게소 들러 가기"면 첫 휴게소를 경유지로 넣는다. 제안마다 제안대로 했는지(낮에 가기를 골랐는지, 휴게소를 지나 도착했는지)를 남겨 조건별로 센다. 지키지 않은 것을 탓하지 않고 횟수만 보여준다.
-5. **길 헤맴**: 이 목적지로 5번 이상 다녀온 길에서 5분 안에 경로 재탐색(`onReRouteEnded`)이 2번 나오면 집 안내를 제안한다.
-6. **다음 할 일**: 3번의 변화가 있고 운전자가 만 60세 이상이면 가장 가까운 치매안심센터 한 곳을 제안한다. 만 60세 이상은 소득과 상관없이 인지선별검사가 무료다. 가라고 권하지 않고 길만 열어 둔다.
+```mermaid
+flowchart LR
+  subgraph IN["차량 입력 (Pleos Connect)"]
+    direction TB
+    VSDK["Vehicle SDK<br/>TurnSignal · Door · Telltales · Light"]
+    NAVI["NaviHelper SDK<br/>onTBTInfo · onReRouteEnded"]
+    CPM["CarPropertyManager<br/>기어 · 주차 브레이크 · 차속"]
+    CENTER["공공데이터포털<br/>전국치매센터표준데이터"]
+  end
 
-## 구조
+  subgraph APP["오래운전 앱"]
+    direction LR
+    subgraph SRCG["신호 공급원"]
+      direction TB
+      PLEOS["PleosSignalSource<br/>(연결 예정)"]
+      DEMO["DemoSignalSource<br/>첫 4주 · 7주째 시연 기록"]
+      SRC["VehicleSignalSource"]
+    end
+    subgraph ENG["engine/ · 테스트 23개"]
+      direction TB
+      DET["MissedTurnSignalDetector<br/>깜빡이 누락 (집중잔량과 공유)"]
+      BASE["Baseline<br/>처음 4주 = 평소 · 변화 판정"]
+      NEXT["NextStepAdvisor<br/>만 60세 이상 무료 검사 안내"]
+      WAND["WanderingDetector<br/>늘 다니던 길에서 재탐색 2번"]
+      COND["ConditionAdvisor · ConditionRecord<br/>함께 정한 조건 적용 · 지킨 기록"]
+      DB[("차 안 저장소 (예정)<br/>공유는 본인이 켤 때만")]
+    end
+    UI["ui/ · Jetpack Compose<br/>출발 인사 · 주행 · 주차<br/>변화 안내 · 가족과 같이 보기"]
+  end
+
+  subgraph OUT["차량 출력"]
+    direction TB
+    ROUTE["NaviHelper<br/>휴게소 경유지 · 집 안내<br/>센터 길 안내"]
+    VOICE["STT · TTS<br/>출발 인사 · 깜빡이 알림"]
+  end
+
+  VSDK -.-> PLEOS
+  NAVI -.-> PLEOS
+  CPM -.-> PLEOS
+  PLEOS -.-> SRC
+  DEMO --> SRC
+  SRC -- DriveSignal --> DET --> BASE --> NEXT
+  SRC --> WAND
+  SRC --> COND
+  CENTER -.-> NEXT
+  BASE -.- DB
+  NEXT --> UI
+  BASE --> UI
+  WAND --> UI
+  COND --> UI
+  UI -.-> ROUTE
+  UI -.-> VOICE
+```
+
+### 변화는 이렇게 알린다
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant D as MissedTurnSignalDetector
+  participant B as Baseline
+  participant X as NextStepAdvisor
+  participant U as 화면
+  participant F as 가족 (본인 동의 시)
+  D->>B: 주마다 회전 수 · 놓친 회전 수
+  Note over B: 처음 4주가 평소
+  B->>B: 최근 3주 모두 평소보다 높고<br/>지난주가 평소보다 10%p 이상 높은가
+  B->>U: 본인에게 먼저 "요즘 깜빡이를 자주 놓치셨어요"
+  B->>X: 변화 있음 + 만 60세 이상
+  X->>U: 가까운 치매안심센터 무료 검사, 길 안내만 열어 둔다
+  U->>F: 가족이 동승해 주차 중일 때 함께 보고 운전 조건을 정한다
+  Note over B,U: 한 주만 튀는 것은 변화로 보지 않는다
+```
+
+<details>
+<summary><b>폴더 구조</b></summary>
 
 ```
 app/src/main/java/com/botdue/orae/
@@ -73,7 +199,10 @@ app/src/main/java/com/botdue/orae/
 └── MainActivity.kt                화면 흐름
 ```
 
-### Pleos SDK 연결 계획
+</details>
+
+<details>
+<summary><b>Pleos SDK 연결 계획</b></summary>
 
 | 신호 | API |
 | --- | --- |
@@ -86,6 +215,20 @@ app/src/main/java/com/botdue/orae/
 | 가까운 치매안심센터 | 공공데이터포털 [전국치매센터표준데이터](https://www.data.go.kr/data/15021138/standard.do) (위도·경도), 길 안내는 NaviHelper |
 
 `VehicleSignalSource` 를 구현한 `PleosSignalSource` 를 추가하면 화면과 엔진은 그대로 쓴다.
+
+</details>
+
+
+## 판정 규칙
+
+판정은 엔진(`app/src/main/java/com/botdue/orae/engine/`)이 한다. 모든 규칙에 단위 테스트가 있다.
+
+1. **깜빡이 누락**: 내비가 회전을 안내하고(`NaviHelper onTBTInfo`) 90초 안에 같은 방향으로 회전했을 때, 회전 직전 10초 안에 같은 방향 깜빡이(`Vehicle TurnSignal`)가 켜지지 않았으면 놓침. 안내 없는 회전은 판정하지 않는다.
+2. **나만의 기준선**: 처음 4주 기록이 평소. 남과 비교하거나 점수로 판정하지 않는다.
+3. **변화**: 최근 3주가 모두 평소보다 높고, 지난주가 평소보다 10%p 이상 높을 때만 알린다. 한 주만 튀는 것은 변화로 보지 않는다.
+4. **조건 적용**: "해 진 뒤에는 가까운 곳만"이면 18~6시에 10km가 넘는 출발에 낮에 가기를 제안한다. "고속도로는 휴게소 들러 가기"면 첫 휴게소를 경유지로 넣는다. 제안마다 제안대로 했는지(낮에 가기를 골랐는지, 휴게소를 지나 도착했는지)를 남겨 조건별로 센다. 지키지 않은 것을 탓하지 않고 횟수만 보여준다.
+5. **길 헤맴**: 이 목적지로 5번 이상 다녀온 길에서 5분 안에 경로 재탐색(`onReRouteEnded`)이 2번 나오면 집 안내를 제안한다.
+6. **다음 할 일**: 3번의 변화가 있고 운전자가 만 60세 이상이면 가장 가까운 치매안심센터 한 곳을 제안한다. 만 60세 이상은 소득과 상관없이 인지선별검사가 무료다. 가라고 권하지 않고 길만 열어 둔다.
 
 ## 실행
 
@@ -114,9 +257,10 @@ adb install apk/봇듀_오래운전_release.apk   # Pleos Connect Emulator(AAOS)
 
 ## 원칙
 
-- 운전 기록은 차 안에만 저장한다. 가족 공유는 본인이 켰을 때만 한다.
-- 운전 습관의 변화를 보여줄 뿐 의학적 진단이 아니다. "진단", "판정" 같은 말은 화면에 쓰지 않는다.
-- 운전을 막지 않는다. 제안만 하고, 고르는 건 언제나 운전자 본인이다.
+> [!IMPORTANT]
+> - 운전 기록은 차 안에만 저장한다. 가족 공유는 본인이 켰을 때만 한다.
+> - 운전 습관의 변화를 보여줄 뿐 의학적 진단이 아니다. "진단", "판정" 같은 말은 화면에 쓰지 않는다.
+> - 운전을 막지 않는다. 제안만 하고, 고르는 건 언제나 운전자 본인이다.
 
 ## 라이선스
 

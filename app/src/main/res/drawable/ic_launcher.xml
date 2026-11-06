@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 3x3 픽셀 마크: 오른쪽 가운데 금색 칸이 방향지시등 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="36"
+    android:viewportHeight="36">
+    <path android:fillColor="#F6F3F2" android:pathData="M0,0h36v36h-36z" />
+    <path android:fillColor="#002C5F" android:pathData="M5,5h7v7h-7z M14.5,5h7v7h-7z M5,14.5h7v7h-7z M14.5,14.5h7v7h-7z M5,24h7v7h-7z M14.5,24h7v7h-7z" />
+    <path android:fillColor="#E4DCD3" android:pathData="M24,5h7v7h-7z M24,24h7v7h-7z" />
+    <path android:fillColor="#A36B4F" android:pathData="M24,14.5h7v7h-7z" />
+</vector>

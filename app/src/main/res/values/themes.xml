@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Orae" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/light_sand</item>
+        <item name="android:statusBarColor">@color/light_sand</item>
+        <item name="android:navigationBarColor">@color/light_sand</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+    <color name="light_sand">#F6F3F2</color>
+</resources>

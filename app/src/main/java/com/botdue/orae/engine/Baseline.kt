@@ -37,6 +37,16 @@ data class LeadReport(val usualMs: Long, val recentMs: Long, val later: Boolean)
 /** 회전 가운데 좌회전 비율. 평소와 최근 3주 */
 data class LeftShareReport(val usual: Double, val recent: Double, val fewer: Boolean)
 
+/** 운전 여건 하나(맑은 낮·비 오는 날·해 진 뒤)에서 평소와 최근 3주 놓침 비율 */
+data class ContextRate(
+    val context: DriveContext,
+    val baseRate: Double,
+    val recentRate: Double,
+    val recentTurns: Int,
+    /** 최근 회전이 판단할 만큼 있고, 평소보다 늘었다 */
+    val rose: Boolean,
+)
+
 /**
  * 나만의 기준선.
  *
@@ -59,6 +69,7 @@ class Baseline(
 ) {
     /** 본인이 운전한 회전만 본다. 다른 가족이 몬 회전은 평소에도 최근에도 넣지 않는다 */
     private val results = results.filter { it.owner }
+    private val others = results.filterNot { it.owner }
 
     /** 다른 사람이 운전해서 뺀 회전 수 */
     val excludedTurns: Int = results.size - this.results.size
@@ -132,6 +143,25 @@ class Baseline(
             r.size >= minContextTurns && rate(r) - rate(of(c).filter(::inBaseline)) >= minIncrease
         }
         return ClearCheck(base, recent, recent - base >= minIncrease, risesIn)
+    }
+
+    /** 여건별 평소·최근 놓침 비율. 화면에서 날씨·밤 탓인지 나눠 보여 줄 때 쓴다 */
+    fun contexts(direction: TurnDirection? = null): List<ContextRate> {
+        if (isLearning()) return emptyList()
+        val turns = results.filter { direction == null || it.direction == direction }
+        return DriveContext.entries.map { c ->
+            val of = turns.filter { it.context == c }
+            val recent = of.filter(::inRecent)
+            val base = rate(of.filter(::inBaseline))
+            val now = rate(recent)
+            ContextRate(c, base, now, recent.size, recent.size >= minContextTurns && now - base >= minIncrease)
+        }
+    }
+
+    /** 주마다 다른 사람이 운전해서 뺀 회전 수. [weekly]와 같은 길이 */
+    fun weeklyOthers(): List<Int> {
+        val byWeek = others.groupBy(::weekOf)
+        return weekly().indices.map { byWeek[it]?.size ?: 0 }
     }
 
     /** 처음 4주가 지나야 본다. 켠 회전이 없는 주는 가운데값을 낼 수 없어 null */

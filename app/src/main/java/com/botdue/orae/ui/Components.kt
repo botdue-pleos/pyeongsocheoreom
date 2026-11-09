@@ -33,6 +33,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
@@ -45,6 +46,7 @@ fun T(
     weight: FontWeight = FontWeight.Normal,
     color: Color = C.Ink,
     lineHeight: Float = 1.4f,
+    align: TextAlign? = null,
 ) {
     Text(
         text = text,
@@ -56,6 +58,7 @@ fun T(
             color = color,
             lineHeight = lineHeight.em,
             letterSpacing = if (size.value >= 30) (-0.02).em else 0.em,
+            textAlign = align ?: TextAlign.Unspecified,
             // 한국어를 어절 단위로 줄바꿈 (기기 언어와 상관없이 ko로 지정해야 적용된다)
             localeList = LocaleList("ko-KR"),
             lineBreak = LineBreak(
@@ -159,6 +162,7 @@ fun turnCells(total: Int, missed: Int): List<Boolean> {
 /**
  * 회전 칸. 칸 하나가 회전 한 번이다.
  * 채운 남색 칸 = 깜빡이를 켠 회전, 금색 테두리만 있는 빈 칸 = 놓친 회전 (모양으로도 구분된다).
+ * [others]만큼 뒤에 붙는 옅은 회색 칸은 다른 분이 운전한 회전이다. 기록에서 빼고 셌다는 표시.
  */
 @Composable
 fun TurnDots(
@@ -169,12 +173,14 @@ fun TurnDots(
     modifier: Modifier = Modifier,
     ring: Dp = 5.px,
     radius: Dp = 8.px,
+    others: Int = 0,
 ) {
+    val all: List<Boolean?> = cells + List(others) { null }
     Column(
         modifier.semantics { contentDescription = description },
         verticalArrangement = Arrangement.spacedBy(gap),
     ) {
-        cells.chunked(columns).forEach { row ->
+        all.chunked(columns).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                 row.forEach { on -> Cell(on, Modifier.weight(1f), ring, radius) }
                 repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
@@ -183,33 +189,35 @@ fun TurnDots(
     }
 }
 
-/** 도장 한 칸: 찍힌 도장은 남색 동그라미, 놓친 회전은 금색 점선 동그라미 */
+/** 도장 한 칸: 찍힌 도장은 남색 동그라미, 놓친 회전은 금색 점선 동그라미, 다른 분 운전(null)은 옅은 회색 */
 @Composable
-private fun Cell(on: Boolean, modifier: Modifier, ring: Dp, radius: Dp) {
+private fun Cell(on: Boolean?, modifier: Modifier, ring: Dp, radius: Dp) {
     Canvas(modifier.aspectRatio(1f)) {
         val r = size.minDimension / 2
-        if (on) {
-            drawCircle(C.Ink, r)
-        } else {
-            val w = ring.toPx().coerceAtMost(r * 0.28f)
-            drawCircle(
-                C.Gold, r - w / 2,
-                style = Stroke(width = w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(w * 1.3f, w * 0.9f))),
-            )
+        when (on) {
+            true -> drawCircle(C.Ink, r)
+            null -> drawCircle(C.Other, r * 0.86f)
+            false -> {
+                val w = ring.toPx().coerceAtMost(r * 0.28f)
+                drawCircle(
+                    C.Gold, r - w / 2,
+                    style = Stroke(width = w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(w * 1.3f, w * 0.9f))),
+                )
+            }
         }
     }
 }
 
 @Composable
-fun Legend() {
-    Row(horizontalArrangement = Arrangement.spacedBy(36.px)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Cell(true, Modifier.size(28.px), 4.px, 0.px)
-            T("깜빡이 켠 회전", 26.tx, Modifier.padding(start = 12.px), color = C.Sub)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Cell(false, Modifier.size(28.px), 4.px, 0.px)
-            T("놓친 회전", 26.tx, Modifier.padding(start = 12.px), color = C.Sub)
-        }
+fun Legend(others: Boolean = false) {
+    Row(horizontalArrangement = Arrangement.spacedBy(32.px)) {
+        listOf<Pair<Boolean?, String>>(true to "깜빡이 켠 회전", false to "놓친 회전")
+            .plus(if (others) listOf(null to "다른 분 운전, 빼고 셈") else emptyList())
+            .forEach { (on, text) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Cell(on, Modifier.size(28.px), 4.px, 0.px)
+                    T(text, 26.tx, Modifier.padding(start = 12.px), color = C.Sub)
+                }
+            }
     }
 }

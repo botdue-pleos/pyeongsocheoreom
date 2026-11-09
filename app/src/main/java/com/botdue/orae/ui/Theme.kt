@@ -31,6 +31,8 @@ object C {
     /** 금색 글자용: 바탕 대비 4.5:1 이상 */
     val GoldText = Color(0xFF7E4E37)
     val SkyBlue = Color(0xFFAACAE6)
+    /** 다른 분이 운전한 회전 (빼고 센 칸) */
+    val Other = Color(0xFFC9D4E0)
 }
 
 /**

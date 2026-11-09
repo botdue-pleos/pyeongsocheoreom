@@ -126,10 +126,15 @@ private fun ColumnScope.Weeks(summary: Summary) {
     }
     if (summary.otherDrives > 0) {
         Spacer(Modifier.height(12.px))
-        T("다른 분이 운전하신 ${summary.otherDrives}번은 운전석 위치로 알아보고 기록에서 뺐어요.", 28.tx, color = C.Sub, lineHeight = 1.5f)
+        T("회색 칸은 운전석 위치로 알아본 다른 분 운전이에요.", 28.tx, color = C.Sub, lineHeight = 1.5f)
     }
-    Spacer(Modifier.height(36.px))
+    Spacer(Modifier.height(24.px))
+    Legend(others = summary.otherDrives > 0)
+    Spacer(Modifier.height(32.px))
     val recent = summary.weeks.takeLast(4)
+    val recentOthers = summary.weeklyOthers.takeLast(4)
+    // 다른 분 운전 칸이 붙어도 두 줄에 들어가게 한 줄 칸 수를 정한다
+    val columns = maxOf(15, (recent.indices.maxOfOrNull { recent[it].turns + recentOthers.getOrElse(it) { 0 } } ?: 0).let { (it + 1) / 2 })
     val labels = listOf("첫째 주", "둘째 주", "셋째 주", "넷째 주").takeLast(recent.size)
     Column(verticalArrangement = Arrangement.spacedBy(24.px)) {
         recent.zip(labels).forEachIndexed { i, (w, label) ->
@@ -139,7 +144,12 @@ private fun ColumnScope.Weeks(summary: Summary) {
                     val latest = i == recent.lastIndex && changed
                     T("${w.turns}번 중 ${w.missed}번", 26.tx, weight = if (latest) FontWeight.Bold else FontWeight.Normal, color = if (latest) C.GoldText else C.Ink)
                 }
-                TurnDots(turnCells(w.turns, w.missed), columns = 15, gap = 9.px, description = "$label 회전 ${w.turns}번 중 ${w.missed}번 놓침", ring = 5.px, radius = 7.px)
+                val others = recentOthers.getOrElse(i) { 0 }
+                TurnDots(
+                    turnCells(w.turns, w.missed), columns = columns, gap = 9.px,
+                    description = "$label 회전 ${w.turns}번 중 ${w.missed}번 놓침" + if (others > 0) ", 다른 분 운전 ${others}번은 빼고 셈" else "",
+                    ring = 5.px, radius = 7.px, others = others,
+                )
             }
         }
     }
@@ -181,27 +191,28 @@ private fun Kept.phrase(): String {
 @Composable
 private fun Habits(summary: Summary) {
     val changed = summary.change != null
+    // 깜빡이 켜는 때와 좌회전 비율은 기록에서 계산한다. 처음 4주는 기준선을 만드는 중이라 표에 "기록 중"으로
+    val lead = summary.lead
+    val left = summary.leftShare
+    if (lead != null) {
+        ChartTitle(
+            if (changed) "${summary.directionNoun} 깜빡이를 켜는 때" else "깜빡이를 켜는 때",
+            if (lead.later) "${summary.laterBy(lead)} 늦어졌어요" else "같아요", lead.later,
+        )
+        LeadRuler(lead.usualMs, lead.recentMs, summary)
+        Spacer(Modifier.height(28.px))
+    }
+    if (left != null) {
+        ChartTitle("회전 중 좌회전", if (left.fewer) "줄었어요" else "같아요", left.fewer)
+        ShareBars(left.usual, left.recent, summary)
+        Spacer(Modifier.height(40.px))
+    }
     T("다른 운전 습관", 30.tx, weight = FontWeight.Bold)
     Spacer(Modifier.height(20.px))
     Divider()
     HabitRow("한 주 기준", "평소", "최근", "달라진 점", header = true)
-    // 깜빡이 켜는 때와 좌회전 비율은 기록에서 계산한다. 처음 4주는 기준선을 만드는 중
-    val lead = summary.lead
-    if (lead == null) {
-        HabitRow("깜빡이 켜는 때", "기록 중", "-", "-")
-    } else {
-        HabitRow(
-            if (changed) "${summary.directionNoun} 깜빡이" else "깜빡이 켜는 때",
-            "${summary.seconds(lead.usualMs)} 전", "${summary.seconds(lead.recentMs)} 전",
-            if (lead.later) "늦어졌어요" else "같아요", highlight = lead.later,
-        )
-    }
-    val left = summary.leftShare
-    if (left == null) {
-        HabitRow("회전 중 좌회전", "기록 중", "-", "-")
-    } else {
-        HabitRow("회전 중 좌회전", summary.percent(left.usual), summary.percent(left.recent), if (left.fewer) "줄었어요" else "같아요", highlight = left.fewer)
-    }
+    if (lead == null) HabitRow("깜빡이 켜는 때", "기록 중", "-", "-")
+    if (left == null) HabitRow("회전 중 좌회전", "기록 중", "-", "-")
     // 시연용 값: 실제로는 NaviHelper 재탐색, Door·기어, Safety 경고등, 전조등 신호로 센다
     HabitRow("다니던 길 다시 찾기", "0번", if (changed) "1번" else "0번", if (changed) "조금 늘었어요" else "같아요", highlight = changed)
     HabitRow("P단 전에 문 열기", "0번", "0번", "같아요")
@@ -216,7 +227,7 @@ private fun HabitRow(a: String, b: String, c: String, d: String, header: Boolean
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = if (header) 16.px else 24.px),
+            .padding(vertical = if (header) 12.px else 18.px),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         T(a, size, Modifier.weight(1.6f), color = color)

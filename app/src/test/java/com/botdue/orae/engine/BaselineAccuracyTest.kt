@@ -155,4 +155,21 @@ class BaselineAccuracyTest {
         assertTrue(b.lead(TurnDirection.RIGHT)!!.later)
         assertFalse(b.leftShare()!!.fewer)
     }
+
+    @Test
+    fun `여건별로 평소와 최근 놓침 비율을 나눠 낸다`() {
+        val results = (0..3).flatMap { week(it, 10, 1) + week(it, 10, 1, context = DriveContext.RAIN) } +
+            (4..6).flatMap { week(it, 10, 1) + week(it, 10, 5, context = DriveContext.RAIN) }
+        val rates = Baseline(results, start).contexts().associateBy { it.context }
+        assertFalse(rates.getValue(DriveContext.CLEAR).rose)
+        assertTrue(rates.getValue(DriveContext.RAIN).rose)
+        assertEquals(0.5, rates.getValue(DriveContext.RAIN).recentRate, 1e-9)
+        assertEquals(0, rates.getValue(DriveContext.DARK).recentTurns)
+    }
+
+    @Test
+    fun `주마다 다른 사람이 운전해서 뺀 회전 수를 센다`() {
+        val results = (0..4).flatMap { week(it, 10, 1) } + week(1, 3, 0, owner = false) + week(4, 2, 0, owner = false)
+        assertEquals(listOf(0, 3, 0, 0, 2), Baseline(results, start).weeklyOthers())
+    }
 }

@@ -46,10 +46,6 @@ fun ChangeScreen(
         T("요즘 ${summary.directionNoun}할 때\n깜빡이를 자주 놓치셨어요", 60.tx, weight = FontWeight.Bold, lineHeight = 1.25f)
         Spacer(Modifier.height(22.px))
         T("${summary.directionNoun} 20번씩 모아 평소와 견줘 봤어요.", 30.tx, color = C.Sub)
-        summary.contextLine?.let {
-            Spacer(Modifier.height(10.px))
-            T(it, 30.tx, color = C.Sub, lineHeight = 1.45f)
-        }
 
         Spacer(Modifier.height(44.px))
         val rows = listOf("평소" to summary.per20(report.baselineRate)) +
@@ -72,9 +68,23 @@ fun ChangeScreen(
             }
         }
 
-        summary.leadLine?.let {
-            Spacer(Modifier.height(32.px))
-            T(it, 30.tx, lineHeight = 1.45f)
+        // 날씨·밤 탓인지: 여건마다 최근 10번으로 줄여 찍는다
+        summary.contextLine?.let { line ->
+            Spacer(Modifier.height(52.px))
+            Divider()
+            Spacer(Modifier.height(36.px))
+            T(line, 30.tx, weight = FontWeight.Bold, lineHeight = 1.45f)
+            Spacer(Modifier.height(24.px))
+            ContextStamps(summary.contexts)
+        }
+
+        // 깜빡이를 켜는 때: 회전 지점까지의 눈금자
+        summary.lead?.takeIf { it.later }?.let { lead ->
+            Spacer(Modifier.height(44.px))
+            Divider()
+            Spacer(Modifier.height(36.px))
+            ChartTitle("깜빡이를 켜는 때", "${summary.laterBy(lead)} 늦어졌어요", highlight = true)
+            LeadRuler(lead.usualMs, lead.recentMs, summary)
         }
 
         Spacer(Modifier.height(44.px))

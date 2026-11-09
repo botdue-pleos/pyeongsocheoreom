@@ -2,6 +2,7 @@ package com.botdue.orae.ui
 
 import com.botdue.orae.engine.Baseline
 import com.botdue.orae.engine.ChangeReport
+import com.botdue.orae.engine.ContextRate
 import com.botdue.orae.engine.DemoScenario
 import com.botdue.orae.engine.DemoSignalSource
 import com.botdue.orae.engine.DriverMatcher
@@ -40,6 +41,12 @@ class Summary(val scenario: DemoScenario) {
     val lead: LeadReport? = baseline.lead(change?.direction)
     val leftShare: LeftShareReport? = baseline.leftShare()
 
+    /** 여건별 평소·최근 놓침. 변화가 잡힌 방향으로 본다 */
+    val contexts: List<ContextRate> = change?.let { baseline.contexts(it.direction) }.orEmpty()
+
+    /** 주마다 다른 분이 운전해서 뺀 회전 수 ([weeks]와 같은 길이) */
+    val weeklyOthers: List<Int> = baseline.weeklyOthers()
+
     /** 최근 4주 동안 다른 사람이 운전해서 기록에서 뺀 출발 횟수 */
     val otherDrives: Int = driver.otherTrips(signals).count {
         val date = java.time.Instant.ofEpochMilli(it.timeMs).atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDate()
@@ -68,6 +75,10 @@ class Summary(val scenario: DemoScenario) {
     }
 
     fun seconds(ms: Long): String = "${(ms / 1000.0).roundToInt()}초"
+
+    /** 늦어진 초. 화면의 "평소 n초 전·지난주 m초 전"과 맞도록 반올림한 값끼리 뺀다 */
+    fun laterBy(lead: LeadReport): String =
+        "${(lead.usualMs / 1000.0).roundToInt() - (lead.recentMs / 1000.0).roundToInt()}초"
 
     fun percent(share: Double): String = "${(share * 100).roundToInt()}%"
 

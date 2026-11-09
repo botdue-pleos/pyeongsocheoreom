@@ -8,8 +8,8 @@
 
 ![Pleos Connect](https://img.shields.io/badge/Pleos_Connect-AAOS-002C5F?style=flat-square)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
-![Tests](https://img.shields.io/badge/엔진_테스트-35개_통과-00AAD2?style=flat-square)
-![Version](https://img.shields.io/badge/version-0.6.0-A36B4F?style=flat-square)
+![Tests](https://img.shields.io/badge/엔진_테스트-37개_통과-00AAD2?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.7.0-A36B4F?style=flat-square)
 
 <img src="docs/mockups/5_family.jpg" width="100%" alt="가족과 같이 보기 화면이 계기판과 이어진 중앙 디스플레이에 떠 있는 모습">
 
@@ -47,7 +47,7 @@
 <td><img src="docs/mockups/8_next_step.jpg" alt="다음 할 일, 무료 검사 안내"></td>
 </tr>
 <tr>
-<td><b>변화 안내</b><br>평소보다 자주 놓치면 본인에게 먼저. 칸 하나가 회전 한 번, 빈 칸이 놓친 회전</td>
+<td><b>변화 안내</b><br>평소보다 자주 놓치면 본인에게 먼저. 칸 하나가 회전 한 번, 빈 칸이 놓친 회전. 아래에 여건별 도장 줄과 깜빡이 켜는 때 눈금자</td>
 <td><b>다음 할 일</b><br>만 60세 이상이면 가까운 치매안심센터 무료 검사와 길 안내를 열어 둔다</td>
 </tr>
 <tr>
@@ -80,7 +80,7 @@
 1. 출발 인사: "오늘 어디 가세요?" 자주 가는 곳을 크게 보여 준다.<br>
 2. 주행: 본인이 수락해 둔 조건대로 회전 200m 앞에서 "오른쪽 깜빡이를 켜 주세요".<br>
 3. 도착 뒤: 최근 3주 놓침이 평소보다 늘었으면 본인에게 먼저, 수첩 도장 칸으로 보여 준다.<br><br>
-<sub>에뮬레이터 실제 화면(v0.6.0)을 녹화했다.</sub>
+<sub>에뮬레이터 실제 화면(v0.6.0)을 녹화했다. 시연 영상은 v0.7.0 화면.</sub>
 </td>
 </tr>
 </table>
@@ -126,6 +126,11 @@
 - **도장 칸**: 회전 한 번이 동그란 도장 한 칸이다. 찍힌 칸은 Hyundai Blue, 깜빡이를 놓친 회전은 금색 점선 동그라미로 남는다. 금색은 이 빈 칸에만 쓴다.
 - **출발 인사**: 자주 가는 곳은 버튼 대신 라디오 동그라미가 달린 줄 친 목록이다. 손가락이 닿는 줄 전체가 눌린다.
 - **가족과 같이 보기**: 가로 2칸 화면에 펼친 앨범처럼 왼쪽 장은 4주 기록, 오른쪽 장은 습관·함께 정할 조건.
+- **글 대신 그림으로 (v0.7.0)**: 기준선을 더 정확하게 보는 정보도 수첩 문법으로 그린다.
+  - 깜빡이 켜는 때는 회전 지점까지 이어진 눈금자. 평소는 빈 동그라미, 지난주는 찍힌 동그라미, 늦어진 만큼은 금색 점선.
+  - 날씨·밤 탓인지는 여건마다 최근 10번으로 줄인 도장 줄. 기록이 적은 여건은 견주지 않았다고 한 줄로 적는다.
+  - 다른 가족이 운전한 회전은 그 주 도장 줄 끝에 옅은 회색 칸으로 남긴다. 세지 않았다는 표시.
+  - 좌회전 비율은 평소·최근 막대 두 줄.
 - 고령 운전자가 읽기 쉽게 진한 남색 글자와 큰 글씨(본문 최소 26)를 유지했다.
 - 서체는 Asta Sans(42dot, OFL). 현대차 광고에 쓰이는 Hyundai Sans는 배포할 수 없는 전용 서체라, Pleos가 쓰는 같은 계열 공개 서체로 세 앱을 통일했다. 한국어는 어절 단위로만 줄을 바꾼다(`WordBreak.Phrase`).
 
@@ -216,7 +221,7 @@ app/src/main/java/com/botdue/orae/
 
 ```bash
 adb install apk/봇듀_오래운전_release.apk   # Pleos Connect Emulator(AAOS)
-./gradlew :app:testDebugUnitTest            # 판정 엔진 테스트 35개
+./gradlew :app:testDebugUnitTest            # 판정 엔진 테스트 37개
 ./gradlew :app:assembleRelease              # APK 빌드 (JDK 17)
 ```
 
@@ -244,6 +249,7 @@ adb shell am start -n com.botdue.orae/.MainActivity --es screen Family --ez cond
 - [x] 시연 영상 v6: v0.4.0 화면으로 다시 녹화
 - [x] 기준선 정확도: 운전석 위치로 다른 가족 운전 빼기, 맑은 낮·비·해 진 뒤 가리기, 깜빡이 켜는 때·좌회전 비율, 테스트 35개 (v0.5.0)
 - [x] 디자인 v2 "종이 수첩": 세 앱이 겹치지 않게 화면 문법을 나눔. 흰 종이 한 장과 밑줄 제목, 동그란 도장 칸, 줄 친 출발 목록, 움직이는 장면 다시 녹화, 시연 영상 v8 (v0.6.0)
+- [x] v0.5.0 정보를 그림으로: 깜빡이 켜는 때 눈금자, 여건별 도장 줄, 다른 가족 운전 회색 칸, 좌회전 막대, 테스트 37개, 시연 영상 v9 (v0.7.0)
 - [ ] Pleos Connect Emulator에서 SDK 콜백 연결 (`PleosSignalSource`)
 - [ ] STT·TTS 음성, 휴게소 경유지 실제 설정, 로컬 DB 저장
 - [ ] 몇 주치 주행을 빠르게 재생하는 시연 도구 (2차 PT용)

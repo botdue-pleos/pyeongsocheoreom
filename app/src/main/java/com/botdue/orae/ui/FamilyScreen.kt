@@ -63,9 +63,9 @@ fun FamilyScreen(
             Header("오래운전 가족과 같이 보기", if (wide) "${from.korean()}부터 ${to.korean()}까지" else null)
             Spacer(Modifier.height(if (wide) 36.px else 48.px))
             if (wide) {
-                // 가로 2칸: 왼쪽은 기록, 오른쪽은 습관·조건·버튼
-                Row(horizontalArrangement = Arrangement.spacedBy(96.px)) {
-                    Column(Modifier.weight(1f)) {
+                // 가로 2칸: 펼친 앨범처럼 왼쪽 장은 기록, 오른쪽 장은 습관·조건·버튼
+                Row(horizontalArrangement = Arrangement.spacedBy(20.px)) {
+                    Column(Modifier.weight(1f).background(C.Card, RoundedCornerShape(18.px)).padding(48.px)) {
                         Weeks(summary)
                         Spacer(Modifier.height(32.px))
                         T(DISCLAIMER, 26.tx, color = C.Sub)
@@ -74,7 +74,7 @@ fun FamilyScreen(
                             KeptRecord(kept)
                         }
                     }
-                    Column(Modifier.weight(1f)) {
+                    Column(Modifier.weight(1f).background(C.Card, RoundedCornerShape(18.px)).padding(48.px)) {
                         Habits(summary)
                         Spacer(Modifier.height(36.px))
                         Conditions(conditions, onToggle)

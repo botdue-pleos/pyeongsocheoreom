@@ -14,15 +14,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * 현대차 CI 색. 고령 운전자가 읽기 쉽도록 밝은 바탕(Light Sand)에 진한 글자(Hyundai Blue)를 쓴다.
- * 금색은 "깜빡이를 놓친 회전" 한 곳에만 쓴다.
+ * 현대차 CI 색. 광고 "Brilliant Moments"의 맑은 낮: 하늘색(Sky Blue)을 옅게 깐 바탕에 흰 종이 카드,
+ * 진한 글자(Hyundai Blue). 운전 수첩처럼 회전 한 번이 도장 한 칸이다.
+ * 금색은 "깜빡이를 놓친 회전"(빈 도장 칸) 한 곳에만 쓴다.
  */
 object C {
-    val Ground = Color(0xFFF6F3F2)
+    val Ground = Color(0xFFEFF4F9)
     val Ink = Color(0xFF002C5F)
     val Sub = Color(0xFF4A5D73)
-    val Line = Color(0xFFE4DCD3)
-    val Card = Color(0xFFE4DCD3)
+    val Line = Color(0xFFD6E1EC)
+    /** 수첩 종이 */
+    val Card = Color(0xFFFFFFFF)
     val Gold = Color(0xFFA36B4F)
     /** 금색 글자용: 바탕 대비 4.5:1 이상 */
     val GoldText = Color(0xFF7E4E37)

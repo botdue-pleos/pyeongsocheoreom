@@ -38,28 +38,54 @@ enum class Screen { Greeting, Advice, Driving, Parked, Change, Family }
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { OraeApp() }
+        // 화면 캡처·영상용: adb shell am start ... --es screen Family --ez conds true --ez kept true
+        val start = StartAt(
+            screen = intent.getStringExtra("screen")?.let { runCatching { Screen.valueOf(it) }.getOrNull() } ?: Screen.Greeting,
+            place = intent.getIntExtra("place", 0),
+            evening = intent.getBooleanExtra("evening", false),
+            conds = intent.getBooleanExtra("conds", false),
+            kept = intent.getBooleanExtra("kept", false),
+        )
+        setContent { OraeApp(start) }
     }
 }
 
+data class StartAt(
+    val screen: Screen = Screen.Greeting,
+    val place: Int = 0,
+    val evening: Boolean = false,
+    /** 가족과 정한 조건을 모두 켠 상태로 시작 */
+    val conds: Boolean = false,
+    /** 조건을 지킨 기록(밤 출발 미룸·휴게소 경유)이 있는 상태로 시작 */
+    val kept: Boolean = false,
+)
+
 @Composable
-fun OraeApp() {
+fun OraeApp(start: StartAt = StartAt()) {
     val assets = LocalContext.current.assets
     val font = remember { astaSans(assets) }
 
     // 시연은 7주째(최근 3주 우회전 깜빡이 놓침 증가)로 시작한다
     var scenario by remember { mutableStateOf(DemoScenario.CHANGED) }
     val summary = remember(scenario) { Summary(scenario) }
-    var screen by remember { mutableStateOf(Screen.Greeting) }
-    var place by remember { mutableStateOf(PLACES.first()) }
-    var conditions by remember { mutableStateOf(emptySet<Condition>()) }
+    var screen by remember { mutableStateOf(start.screen) }
+    var place by remember { mutableStateOf(PLACES[start.place.coerceIn(0, PLACES.lastIndex)]) }
+    var conditions by remember { mutableStateOf(if (start.conds) Condition.entries.toSet() else emptySet()) }
     val reminderOn = Condition.REMIND in conditions
     // 시연용 출발 시각: 아침 8시 또는 저녁 7시
-    var evening by remember { mutableStateOf(false) }
+    var evening by remember { mutableStateOf(start.evening) }
     var restStop by remember { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
     // 조건이 작동할 때마다 남긴다. 실제로는 로컬 DB에 쌓는다
-    var events by remember { mutableStateOf(emptyList<ConditionEvent>()) }
+    var events by remember {
+        mutableStateOf(
+            if (start.kept) listOf(
+                ConditionEvent(Condition.NEAR_AT_NIGHT, followed = true),
+                ConditionEvent(Condition.NEAR_AT_NIGHT, followed = false),
+                ConditionEvent(Condition.REST_ON_HIGHWAY, followed = true),
+            ) else emptyList()
+        )
+    }
 
     fun depart(p: com.botdue.orae.ui.Place) {
         val trip = Trip(p.name, p.distanceKm, p.usesHighway, hour = if (evening) 19 else 8, restStop = p.restStop)

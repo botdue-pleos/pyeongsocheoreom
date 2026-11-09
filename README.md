@@ -9,7 +9,7 @@
 ![Pleos Connect](https://img.shields.io/badge/Pleos_Connect-AAOS-002C5F?style=flat-square)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Tests](https://img.shields.io/badge/엔진_테스트-23개_통과-00AAD2?style=flat-square)
-![Version](https://img.shields.io/badge/version-0.3.0-A36B4F?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.4.0-A36B4F?style=flat-square)
 
 <img src="docs/mockups/5_family.jpg" width="100%" alt="가족과 같이 보기 화면이 계기판과 이어진 중앙 디스플레이에 떠 있는 모습">
 
@@ -75,6 +75,15 @@
 <br>
 <a href="docs/demo.mp4"><img src="docs/demo-preview.gif" width="100%" alt="시연 영상 미리보기"></a>
 </details>
+
+## 디자인
+
+현대차 광고 "Brilliant Moments"(인도, 두 편 각각 유튜브 2억 뷰)와 "Live Brilliant"가 담은 일상의 빛나는 순간, 맑은 낮에서 출발했다. 오래운전은 점수표가 아니라 평생 써 온 운전 수첩처럼 보이게 했다.
+
+- **운전 수첩**: 회전 한 번이 도장 한 칸이다. 찍힌 칸은 Hyundai Blue, 깜빡이를 놓친 회전은 금색 테두리의 빈 칸으로 남는다. 금색은 이 빈 칸에만 쓴다.
+- **맑은 낮**: 바탕은 Sky Blue를 옅게 깐 #EFF4F9, 카드는 흰 종이. 고령 운전자가 읽기 쉽게 진한 남색 글자와 큰 글씨(본문 최소 26)를 유지했다.
+- **가족과 같이 보기**: 가로 2칸 화면에 펼친 앨범처럼 왼쪽 장은 4주 기록, 오른쪽 장은 습관·함께 정할 조건.
+- 서체는 Pleos 공식 Asta Sans.
 
 ## 왜 만들었나
 

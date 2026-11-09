@@ -8,12 +8,12 @@
 
 ![Pleos Connect](https://img.shields.io/badge/Pleos_Connect-AAOS-002C5F?style=flat-square)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
-![Tests](https://img.shields.io/badge/엔진_테스트-23개_통과-00AAD2?style=flat-square)
-![Version](https://img.shields.io/badge/version-0.4.0-A36B4F?style=flat-square)
+![Tests](https://img.shields.io/badge/엔진_테스트-35개_통과-00AAD2?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.5.0-A36B4F?style=flat-square)
 
 <img src="docs/mockups/5_family.jpg" width="100%" alt="가족과 같이 보기 화면이 계기판과 이어진 중앙 디스플레이에 떠 있는 모습">
 
-[움직이는 장면](#움직이는-장면) · [**시연 영상 (70초)**](docs/demo.mp4) · [APK 받기](apk/봇듀_오래운전_release.apk) · [개발일지](docs/개발일지.md) · [시스템 구조](#시스템-구조)
+[움직이는 장면](#움직이는-장면) · [**시연 영상 (70초, v0.4.0 화면)**](docs/demo.mp4) · [APK 받기](apk/봇듀_오래운전_release.apk) · [개발일지](docs/개발일지.md) · [시스템 구조](#시스템-구조)
 
 </div>
 
@@ -101,6 +101,9 @@
 | --- | --- |
 | 출발 인사 | 시동을 걸면 "오늘 어디 가세요?"라고 묻고, 답하면 목적지가 정해진다 |
 | 나만의 기준선 | 처음 4주가 본인의 평소. 그다음은 평소보다 달라졌을 때만 본인에게 먼저 알린다 |
+| 누가 운전했나 | 출발할 때 운전석 위치로 본인인지 알아본다. 자녀가 몬 날은 기준선에서 빼고, 가족 화면에 몇 번 뺐는지 적는다 |
+| 날씨·밤 가리기 | 와이퍼와 해 지는 시각으로 회전마다 맑은 낮·비 오는 날·해 진 뒤를 남긴다. 맑은 낮에도 늘었는지 따로 견줘 날씨 탓인지 가린다 |
+| 깜빡이 켜는 때 | 놓치기 전에 먼저 늦어지는지, 회전 몇 초 전에 켜는지를 평소와 견준다. 좌회전 비율도 같이 본다 |
 | 깜빡이 알림 | 본인이 수락하면 회전 200m 앞에서 "오른쪽 깜빡이를 켜 주세요" |
 | 가족과 같이 보기 | 가족이 동승했을 때 주차 중에 최근 4주 기록을 함께 보고 운전 조건을 정한다 |
 | 조건이 작동 | 해 진 뒤 먼 곳이면 "내일 낮에 가실까요?", 고속도로는 휴게소를 경유지로. 막지 않고 제안만 한다 |
@@ -156,9 +159,11 @@ sequenceDiagram
 ```
 app/src/main/java/com/botdue/orae/
 ├── engine/                        판정 엔진 (화면과 분리, 단위 테스트 대상)
-│   ├── DriveSignal.kt             차량 신호 모델: 회전 안내, 방향지시등, 회전 통과
-│   ├── MissedTurnSignalDetector   깜빡이 누락 판정 (집중잔량과 공유)
-│   ├── Baseline.kt                나만의 기준선과 변화 판정
+│   ├── DriveSignal.kt             차량 신호 모델: 회전 안내, 방향지시등, 회전 통과, 운전석 위치, 와이퍼
+│   ├── MissedTurnSignalDetector   깜빡이 누락 판정 (집중잔량과 공유), 켠 때·운전자·여건도 남김
+│   ├── Baseline.kt                나만의 기준선과 변화 판정, 맑은 낮 비교, 깜빡이 켜는 때, 좌회전 비율
+│   ├── DriverMatcher.kt           운전석 위치로 본인·다른 가족 가리기
+│   ├── SunClock.kt                위치와 날짜로 해 뜨고 지는 시각 계산
 │   ├── Conditions.kt              함께 정한 조건을 출발에 적용, 지킨 기록
 │   ├── WanderingDetector.kt       길 헤맴 감지
 │   ├── NextStep.kt                변화 다음 할 일 (무료 검사 안내)
@@ -177,6 +182,8 @@ app/src/main/java/com/botdue/orae/
 | 방향지시등 | `TurnSignal.registerTurnSignalState()` |
 | 회전 안내, 경로 재탐색 | `NaviHelperEventListener.onTBTInfo()`, `onReRouteEnded()` |
 | 문, 경고등, 전조등 | `Door.registerDoorPosition()`, `Safety.registerTelltales()`, `Light.registerLowBeamLightState()` |
+| 운전석 위치, 와이퍼 | `Seat.getCurrentSeatForeAftPosition()`, `Wiper.registerWiperState()` |
+| 해 지는 시각 | FusedLocation 위치 + `SunClock` (인터넷 없이 계산) |
 | 기어(P단), 주차 브레이크, 차속 | AAOS `CarPropertyManager` (GEAR_SELECTION, PARKING_BRAKE_ON, PERF_VEHICLE_SPEED) |
 | 출발 인사, 깜빡이 알림 | STT / TTS |
 | 휴게소 경유 | NaviHelper 경유지·경로 옵션 |
@@ -197,12 +204,15 @@ app/src/main/java/com/botdue/orae/
 4. **조건 적용**: "해 진 뒤에는 가까운 곳만"이면 18~6시에 10km가 넘는 출발에 낮에 가기를 제안한다. "고속도로는 휴게소 들러 가기"면 첫 휴게소를 경유지로 넣는다. 제안마다 제안대로 했는지(낮에 가기를 골랐는지, 휴게소를 지나 도착했는지)를 남겨 조건별로 센다. 지키지 않은 것을 탓하지 않고 횟수만 보여준다.
 5. **길 헤맴**: 이 목적지로 5번 이상 다녀온 길에서 5분 안에 경로 재탐색(`onReRouteEnded`)이 2번 나오면 집 안내를 제안한다.
 6. **다음 할 일**: 3번의 변화가 있고 운전자가 만 60세 이상이면 가장 가까운 치매안심센터 한 곳을 제안한다. 만 60세 이상은 소득과 상관없이 인지선별검사가 무료다. 가라고 권하지 않고 길만 열어 둔다.
+7. **누가 운전했나**: 처음 20번 출발의 운전석 앞뒤 위치(`Seat`) 가운데값이 본인 자리. 그보다 6 넘게 다르면 다른 사람 운전으로 보고 그 출발의 회전은 평소에도 최근에도 넣지 않는다. 위치 값의 단위는 차종마다 달라 실차에서 맞춘다.
+8. **날씨·밤 가리기**: 회전할 때 와이퍼(`Wiper`)가 돌면 비 오는 날, 해가 졌으면(위치와 날짜로 계산) 해 진 뒤, 아니면 맑은 낮. 3번의 변화가 잡히면 맑은 낮 회전만 평소와 최근 3주를 다시 견준다. 맑은 낮에도 10%p 넘게 늘었으면 "날씨나 밤 때문만은 아니에요", 아니면 늘어난 여건만 알린다. 최근 3주에 그 여건 회전이 8번이 안 되면 말하지 않는다.
+9. **깜빡이 켜는 때**: 켠 회전마다 회전 몇 초 전에 켰는지 남긴다. 최근 3주의 주별 가운데값이 모두 평소보다 짧고, 지난주가 평소보다 1.5초 넘게 짧으면 늦어졌다고 본다. 좌회전 비율은 최근 3주 모두 평소보다 낮고 지난주가 10%p 넘게 낮으면 줄었다고 본다. 둘 다 진단이 아니라 평소 대비 변화를 보는 지표다.
 
 ## 실행
 
 ```bash
 adb install apk/봇듀_오래운전_release.apk   # Pleos Connect Emulator(AAOS)
-./gradlew :app:testDebugUnitTest            # 판정 엔진 테스트 23개
+./gradlew :app:testDebugUnitTest            # 판정 엔진 테스트 35개
 ./gradlew :app:assembleRelease              # APK 빌드 (JDK 17)
 ```
 
@@ -228,6 +238,8 @@ adb shell am start -n com.botdue.orae/.MainActivity --es screen Family --ez cond
 - [x] 조건 지킨 기록, 테스트 23개 (v0.3.0)
 - [x] 디자인 "맑은 낮 운전 수첩": 하늘색 바탕, 흰 종이 카드, 펼친 앨범 (v0.4.0)
 - [x] 시연 영상 v6: v0.4.0 화면으로 다시 녹화
+- [x] 기준선 정확도: 운전석 위치로 다른 가족 운전 빼기, 맑은 낮·비·해 진 뒤 가리기, 깜빡이 켜는 때·좌회전 비율, 테스트 35개 (v0.5.0)
+- [ ] 시연 영상과 움직이는 장면을 v0.5.0 화면으로 다시 녹화 (차 안 목업 4장은 v0.5.0으로 교체함)
 - [ ] Pleos Connect Emulator에서 SDK 콜백 연결 (`PleosSignalSource`)
 - [ ] STT·TTS 음성, 휴게소 경유지 실제 설정, 로컬 DB 저장
 - [ ] 몇 주치 주행을 빠르게 재생하는 시연 도구 (2차 PT용)

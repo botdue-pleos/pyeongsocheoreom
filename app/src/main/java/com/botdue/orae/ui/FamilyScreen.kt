@@ -120,6 +120,14 @@ private fun ColumnScope.Weeks(summary: Summary) {
     )
     Spacer(Modifier.height(20.px))
     T("칸 하나가 회전 한 번이에요. 빈 칸은 깜빡이를 놓친 회전이에요.", 28.tx, color = C.Sub, lineHeight = 1.5f)
+    summary.contextLine?.let {
+        Spacer(Modifier.height(12.px))
+        T(it, 28.tx, color = C.Sub, lineHeight = 1.5f)
+    }
+    if (summary.otherDrives > 0) {
+        Spacer(Modifier.height(12.px))
+        T("다른 분이 운전하신 ${summary.otherDrives}번은 운전석 위치로 알아보고 기록에서 뺐어요.", 28.tx, color = C.Sub, lineHeight = 1.5f)
+    }
     Spacer(Modifier.height(36.px))
     val recent = summary.weeks.takeLast(4)
     val labels = listOf("첫째 주", "둘째 주", "셋째 주", "넷째 주").takeLast(recent.size)
@@ -177,6 +185,23 @@ private fun Habits(summary: Summary) {
     Spacer(Modifier.height(20.px))
     Divider()
     HabitRow("한 주 기준", "평소", "최근", "달라진 점", header = true)
+    // 깜빡이 켜는 때와 좌회전 비율은 기록에서 계산한다. 처음 4주는 기준선을 만드는 중
+    val lead = summary.lead
+    if (lead == null) {
+        HabitRow("깜빡이 켜는 때", "기록 중", "-", "-")
+    } else {
+        HabitRow(
+            if (changed) "${summary.directionNoun} 깜빡이" else "깜빡이 켜는 때",
+            "${summary.seconds(lead.usualMs)} 전", "${summary.seconds(lead.recentMs)} 전",
+            if (lead.later) "늦어졌어요" else "같아요", highlight = lead.later,
+        )
+    }
+    val left = summary.leftShare
+    if (left == null) {
+        HabitRow("회전 중 좌회전", "기록 중", "-", "-")
+    } else {
+        HabitRow("회전 중 좌회전", summary.percent(left.usual), summary.percent(left.recent), if (left.fewer) "줄었어요" else "같아요", highlight = left.fewer)
+    }
     // 시연용 값: 실제로는 NaviHelper 재탐색, Door·기어, Safety 경고등, 전조등 신호로 센다
     HabitRow("다니던 길 다시 찾기", "0번", if (changed) "1번" else "0번", if (changed) "조금 늘었어요" else "같아요", highlight = changed)
     HabitRow("P단 전에 문 열기", "0번", "0번", "같아요")

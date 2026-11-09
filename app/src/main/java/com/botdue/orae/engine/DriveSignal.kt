@@ -31,9 +31,36 @@ data class TurnExecuted(
     val direction: TurnDirection,
 ) : DriveSignal
 
+/**
+ * Vehicle Seat getCurrentSeatForeAftPosition: 출발할 때 운전석 앞뒤 위치.
+ * 같은 차를 가족이 번갈아 몰 때 누가 운전하는지 가리는 데 쓴다 ([DriverMatcher]).
+ */
+data class DriverSeat(
+    override val timeMs: Long,
+    val foreAftPosition: Int,
+) : DriveSignal
+
+/** Vehicle Wiper registerWiperState: 앞유리 와이퍼가 켜지거나 꺼짐 */
+data class WiperChanged(
+    override val timeMs: Long,
+    val on: Boolean,
+) : DriveSignal
+
+/** 회전한 때의 운전 여건. 와이퍼가 돌면 비, 해가 진 뒤면 어두울 때 */
+enum class DriveContext(val label: String) {
+    CLEAR("맑은 낮"),
+    RAIN("비 오는 날"),
+    DARK("해 진 뒤"),
+}
+
 /** 회전 한 번의 판정 결과 */
 data class TurnResult(
     val timeMs: Long,
     val direction: TurnDirection,
     val signalled: Boolean,
+    /** 회전 몇 ms 전에 깜빡이를 켰는지. 놓쳤으면 null */
+    val leadMs: Long? = null,
+    /** 기준선의 주인(본인)이 운전했는지. 다른 가족이 몰았으면 false */
+    val owner: Boolean = true,
+    val context: DriveContext = DriveContext.CLEAR,
 )

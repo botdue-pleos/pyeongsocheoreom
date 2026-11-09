@@ -16,7 +16,26 @@ data class ChangeReport(
     val baselineRate: Double,
     /** 최근 3주, 오래된 주부터 */
     val recent: List<WeekStat>,
+    /** 맑은 낮 회전만 따로 견준 결과. 날씨나 밤 탓인지 가린다 */
+    val clear: ClearCheck? = null,
 )
+
+/**
+ * 맑은 낮 회전만 평소와 최근 3주를 견준 것.
+ * [changed]가 false면 늘어난 놓침이 [risesIn] 여건(비 오는 날, 해 진 뒤)에 몰려 있다는 뜻이다.
+ */
+data class ClearCheck(
+    val baseRate: Double,
+    val recentRate: Double,
+    val changed: Boolean,
+    val risesIn: List<DriveContext>,
+)
+
+/** 회전 몇 초 전에 깜빡이를 켜는지. 평소와 지난주 가운데값 */
+data class LeadReport(val usualMs: Long, val recentMs: Long, val later: Boolean)
+
+/** 회전 가운데 좌회전 비율. 평소와 최근 3주 */
+data class LeftShareReport(val usual: Double, val recent: Double, val fewer: Boolean)
 
 /**
  * 나만의 기준선.
@@ -26,12 +45,24 @@ data class ChangeReport(
  * 변화 판정: 최근 3주가 모두 평소보다 높고, 가장 최근 주가 평소보다 [minIncrease] 이상 높을 때.
  */
 class Baseline(
-    private val results: List<TurnResult>,
+    results: List<TurnResult>,
     private val startDate: LocalDate,
     private val baselineWeeks: Int = 4,
     private val minIncrease: Double = 0.1,
+    /** 깜빡이를 이만큼 늦게 켜게 되면 늦어졌다고 본다 */
+    private val minLeadDropMs: Long = 1_500,
+    /** 좌회전 비율이 이만큼 줄면 줄었다고 본다 */
+    private val minLeftDrop: Double = 0.1,
+    /** 여건별로 견줄 때 최근 3주에 이만큼은 있어야 판단한다 */
+    private val minContextTurns: Int = 8,
     private val zone: ZoneId = ZoneId.of("Asia/Seoul"),
 ) {
+    /** 본인이 운전한 회전만 본다. 다른 가족이 몬 회전은 평소에도 최근에도 넣지 않는다 */
+    private val results = results.filter { it.owner }
+
+    /** 다른 사람이 운전해서 뺀 회전 수 */
+    val excludedTurns: Int = results.size - this.results.size
+
     private fun weekOf(r: TurnResult): Int {
         val date = Instant.ofEpochMilli(r.timeMs).atZone(zone).toLocalDate()
         return (ChronoUnit.DAYS.between(startDate, date) / 7).toInt()
@@ -73,8 +104,59 @@ class Baseline(
             val base = baselineRate(dir)
             val allAbove = recent.all { it.missRate > base }
             val enough = recent.last().missRate - base >= minIncrease
-            if (allAbove && enough) return ChangeReport(dir, base, recent)
+            if (allAbove && enough) return ChangeReport(dir, base, recent, clearCheck(dir))
         }
         return null
     }
+
+    private fun inBaseline(r: TurnResult) = weekOf(r) < baselineWeeks
+
+    private fun inRecent(r: TurnResult): Boolean {
+        val last = weekly().size - 1
+        return weekOf(r) in (last - 2)..last && !inBaseline(r)
+    }
+
+    private fun rate(turns: List<TurnResult>) =
+        if (turns.isEmpty()) 0.0 else turns.count { !it.signalled }.toDouble() / turns.size
+
+    /** 맑은 낮 회전만 따로 견준다. 맑은 낮에도 늘었으면 날씨·밤 탓이 아니다 */
+    private fun clearCheck(direction: TurnDirection?): ClearCheck? {
+        val turns = results.filter { direction == null || it.direction == direction }
+        fun of(c: DriveContext) = turns.filter { it.context == c }
+        val clearRecent = of(DriveContext.CLEAR).filter(::inRecent)
+        if (clearRecent.size < minContextTurns) return null
+        val base = rate(of(DriveContext.CLEAR).filter(::inBaseline))
+        val recent = rate(clearRecent)
+        val risesIn = listOf(DriveContext.RAIN, DriveContext.DARK).filter { c ->
+            val r = of(c).filter(::inRecent)
+            r.size >= minContextTurns && rate(r) - rate(of(c).filter(::inBaseline)) >= minIncrease
+        }
+        return ClearCheck(base, recent, recent - base >= minIncrease, risesIn)
+    }
+
+    /** 처음 4주가 지나야 본다. 켠 회전이 없는 주는 가운데값을 낼 수 없어 null */
+    fun lead(direction: TurnDirection? = null): LeadReport? {
+        if (isLearning()) return null
+        val turns = results.filter { (direction == null || it.direction == direction) && it.leadMs != null }
+        val usual = median(turns.filter(::inBaseline).mapNotNull { it.leadMs }) ?: return null
+        val byWeek = turns.groupBy(::weekOf)
+        val last = weekly().size - 1
+        val recent = (maxOf(baselineWeeks, last - 2)..last).map { w -> median(byWeek[w].orEmpty().mapNotNull { it.leadMs }) ?: return null }
+        val later = recent.all { it < usual } && usual - recent.last() >= minLeadDropMs
+        return LeadReport(usual, recent.last(), later)
+    }
+
+    fun leftShare(): LeftShareReport? {
+        if (isLearning()) return null
+        fun share(turns: List<TurnResult>) =
+            if (turns.isEmpty()) 0.0 else turns.count { it.direction == TurnDirection.LEFT }.toDouble() / turns.size
+        val byWeek = results.groupBy(::weekOf)
+        val last = weekly().size - 1
+        val usual = share(results.filter(::inBaseline))
+        val weeks = (maxOf(baselineWeeks, last - 2)..last).map { share(byWeek[it].orEmpty()) }
+        val fewer = weeks.all { it < usual } && usual - weeks.last() >= minLeftDrop
+        return LeftShareReport(usual, share(results.filter(::inRecent)), fewer)
+    }
+
+    private fun median(values: List<Long>): Long? = values.sorted().let { if (it.isEmpty()) null else it[it.size / 2] }
 }

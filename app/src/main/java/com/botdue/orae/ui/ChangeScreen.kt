@@ -46,6 +46,10 @@ fun ChangeScreen(
         T("요즘 ${summary.directionNoun}할 때\n깜빡이를 자주 놓치셨어요", 60.tx, weight = FontWeight.Bold, lineHeight = 1.25f)
         Spacer(Modifier.height(22.px))
         T("${summary.directionNoun} 20번씩 모아 평소와 견줘 봤어요.", 30.tx, color = C.Sub)
+        summary.contextLine?.let {
+            Spacer(Modifier.height(10.px))
+            T(it, 30.tx, color = C.Sub, lineHeight = 1.45f)
+        }
 
         Spacer(Modifier.height(44.px))
         val rows = listOf("평소" to summary.per20(report.baselineRate)) +
@@ -66,6 +70,11 @@ fun ChangeScreen(
                     )
                 }
             }
+        }
+
+        summary.leadLine?.let {
+            Spacer(Modifier.height(32.px))
+            T(it, 30.tx, lineHeight = 1.45f)
         }
 
         Spacer(Modifier.height(44.px))

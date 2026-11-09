@@ -1,5 +1,6 @@
 package com.botdue.orae.ui
 
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -77,11 +78,12 @@ fun GreetingScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .background(C.Ground)
+            .page()
             .verticalScroll(rememberScrollState())
             .padding(start = 64.px, end = 64.px, top = 64.px, bottom = 56.px)
     ) {
-        Header("오래운전", if (evening) "오후 7:10" else "오전 8:12")
+        // 수첩 머리는 오늘 날짜. 시연 시각은 아침 8시 12분 또는 저녁 7시 10분
+        Header(todayLabel(), if (evening) "오후 7시 10분" else "오전 8시 12분")
         Spacer(Modifier.height(56.px))
         T(if (evening) "좋은 저녁이에요.\n어디 가세요?" else "좋은 아침이에요.\n오늘 어디 가세요?", 68.tx, weight = FontWeight.Bold, lineHeight = 1.22f)
         Spacer(Modifier.height(36.px))
@@ -95,7 +97,6 @@ fun GreetingScreen(
         Spacer(Modifier.height(16.px))
         PLACES.forEachIndexed { i, place ->
             PlaceButton(place, filled = i == 0) { onPlace(place) }
-            Spacer(Modifier.height(16.px))
         }
         if (notice != null) {
             T(notice, 28.tx, weight = FontWeight.SemiBold, color = C.GoldText)
@@ -142,20 +143,25 @@ private fun DemoLink(text: String, onClick: () -> Unit) {
     )
 }
 
+/** 자주 가는 곳 한 줄: 수첩에 줄 그은 목록처럼. 첫 줄(가장 자주 가는 곳)만 동그라미를 채운다 */
 @Composable
 private fun PlaceButton(place: Place, filled: Boolean, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(16.px)
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .height(124.px)
-            .then(if (filled) Modifier.background(C.Ink, shape) else Modifier.border(BorderStroke(3.px, C.Ink), shape))
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 36.px),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        T(place.name, 40.tx, Modifier.weight(1f), FontWeight.Bold, if (filled) C.Ground else C.Ink)
-        T(place.minutes, 30.tx, color = if (filled) C.SkyBlue else C.Sub)
+    Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(120.px),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .size(44.px)
+                    .then(if (filled) Modifier.background(C.Ink, CircleShape) else Modifier.border(BorderStroke(4.px, C.Ink), CircleShape))
+            )
+            T(place.name, 40.tx, Modifier.padding(start = 28.px).weight(1f), FontWeight.Bold)
+            T(place.minutes, 30.tx, color = C.Sub)
+        }
+        Box(Modifier.fillMaxWidth().height(2.px).background(C.Line))
     }
 }
 
@@ -178,4 +184,11 @@ private fun VoiceBars() {
             )
         }
     }
+}
+
+/** 수첩 머리용 오늘 날짜: "11월 9일 일요일" */
+private fun todayLabel(): String {
+    val d = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Seoul"))
+    val days = listOf("월", "화", "수", "목", "금", "토", "일")
+    return "${d.monthValue}월 ${d.dayOfMonth}일 ${days[d.dayOfWeek.value - 1]}요일"
 }

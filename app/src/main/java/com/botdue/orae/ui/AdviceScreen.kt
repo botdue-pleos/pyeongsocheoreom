@@ -26,7 +26,7 @@ fun AdviceScreen(place: Place, onLater: () -> Unit, onGoAnyway: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(C.Ground)
+            .page()
             .verticalScroll(rememberScrollState())
             .padding(start = 64.px, end = 64.px, top = 64.px, bottom = 56.px)
     ) {
@@ -40,7 +40,7 @@ fun AdviceScreen(place: Place, onLater: () -> Unit, onGoAnyway: () -> Unit) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(C.Card, RoundedCornerShape(18.px))
+                .background(C.Note, RoundedCornerShape(18.px))
                 .padding(40.px),
             verticalArrangement = Arrangement.spacedBy(12.px),
         ) {

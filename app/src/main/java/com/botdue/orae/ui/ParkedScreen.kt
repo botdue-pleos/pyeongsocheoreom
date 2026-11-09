@@ -23,7 +23,7 @@ fun ParkedScreen(summary: Summary, onDone: () -> Unit, onDetail: () -> Unit, onF
     Column(
         Modifier
             .fillMaxSize()
-            .background(C.Ground)
+            .page()
             .verticalScroll(rememberScrollState())
             .padding(start = 64.px, end = 64.px, top = 64.px, bottom = 56.px)
     ) {

@@ -19,12 +19,14 @@ import androidx.compose.ui.unit.sp
  * 금색은 "깜빡이를 놓친 회전"(빈 도장 칸) 한 곳에만 쓴다.
  */
 object C {
-    val Ground = Color(0xFFEFF4F9)
+    val Ground = Color(0xFFE6EEF6)
     val Ink = Color(0xFF002C5F)
     val Sub = Color(0xFF4A5D73)
     val Line = Color(0xFFD6E1EC)
     /** 수첩 종이 */
     val Card = Color(0xFFFFFFFF)
+    /** 종이 위에 붙인 쪽지 (조건·알림) */
+    val Note = Color(0xFFEFF4F9)
     val Gold = Color(0xFFA36B4F)
     /** 금색 글자용: 바탕 대비 4.5:1 이상 */
     val GoldText = Color(0xFF7E4E37)

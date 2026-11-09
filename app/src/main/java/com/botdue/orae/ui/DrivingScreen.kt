@@ -65,7 +65,7 @@ fun DrivingScreen(place: Place, reminderOn: Boolean, restStop: String?, onPark: 
     Column(
         Modifier
             .fillMaxSize()
-            .background(C.Ground)
+            .page()
             .padding(64.px)
     ) {
         Header("${target.name.toward()} 가는 중", target.minutes.ifEmpty { null })
@@ -98,7 +98,7 @@ fun DrivingScreen(place: Place, reminderOn: Boolean, restStop: String?, onPark: 
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .background(C.Card, RoundedCornerShape(18.px))
+                    .background(C.Note, RoundedCornerShape(18.px))
                     .padding(40.px),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -151,7 +151,7 @@ private fun RightTurnArrow() {
     }
 }
 
-/** 픽셀 방향지시등: 오른쪽으로 갈수록 진해지며 깜빡인다 */
+/** 방향지시등: 도장 같은 동그라미 셋이 오른쪽으로 갈수록 진해지며 깜빡인다 */
 @Composable
 private fun BlinkerIcon() {
     val blink by rememberInfiniteTransition(label = "blink").animateFloat(
@@ -165,17 +165,8 @@ private fun BlinkerIcon() {
             .semantics { contentDescription = "오른쪽 깜빡이" }
     ) {
         val u = size.width / 30f
-        val cells = listOf(
-            Triple(0f, 11f, 0.35f), Triple(11f, 11f, 0.65f), Triple(22f, 11f, 1f),
-            Triple(11f, 0f, 0.65f), Triple(11f, 22f, 0.65f),
-        )
-        cells.forEach { (x, y, a) ->
-            drawRoundRect(
-                color = C.Gold.copy(alpha = a * blink),
-                topLeft = Offset(x * u, y * u),
-                size = Size(8 * u, 8 * u),
-                cornerRadius = CornerRadius(1.8f * u),
-            )
+        listOf(4f to 0.35f, 15f to 0.65f, 26f to 1f).forEach { (x, a) ->
+            drawCircle(C.Gold.copy(alpha = a * blink), radius = 4.2f * u, center = Offset(x * u, 15f * u))
         }
     }
 }

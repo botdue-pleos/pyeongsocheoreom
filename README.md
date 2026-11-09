@@ -9,11 +9,11 @@
 ![Pleos Connect](https://img.shields.io/badge/Pleos_Connect-AAOS-002C5F?style=flat-square)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack_Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Tests](https://img.shields.io/badge/엔진_테스트-35개_통과-00AAD2?style=flat-square)
-![Version](https://img.shields.io/badge/version-0.5.0-A36B4F?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.6.0-A36B4F?style=flat-square)
 
 <img src="docs/mockups/5_family.jpg" width="100%" alt="가족과 같이 보기 화면이 계기판과 이어진 중앙 디스플레이에 떠 있는 모습">
 
-[움직이는 장면](#움직이는-장면) · [**시연 영상 (70초, v0.4.0 화면)**](docs/demo.mp4) · [APK 받기](apk/봇듀_오래운전_release.apk) · [개발일지](docs/개발일지.md) · [시스템 구조](#시스템-구조)
+[움직이는 장면](#움직이는-장면) · [**시연 영상 (65초)**](docs/demo.mp4) · [APK 받기](apk/봇듀_오래운전_release.apk) · [개발일지](docs/개발일지.md) · [시스템 구조](#시스템-구조)
 
 </div>
 
@@ -76,11 +76,11 @@
 <tr>
 <td width="45%"><img src="docs/demo-preview.gif" width="100%" alt="출발 인사에서 자주 가는 곳을 고르고, 주행 중 회전 200m 앞에서 깜빡이 알림이 나오고, 도착 후 평소보다 놓침이 늘었다는 안내를 보는 흐름"></td>
 <td>
-<b>아침 장보기 (21초)</b><br><br>
+<b>아침 장보기 (28초)</b><br><br>
 1. 출발 인사: "오늘 어디 가세요?" 자주 가는 곳을 크게 보여 준다.<br>
 2. 주행: 본인이 수락해 둔 조건대로 회전 200m 앞에서 "오른쪽 깜빡이를 켜 주세요".<br>
-3. 도착 뒤: 최근 3주 놓침이 평소보다 늘었으면 본인에게 먼저, 수첩 칸으로 보여 준다.<br><br>
-<sub>에뮬레이터 실제 화면(v0.4.0)을 녹화했다.</sub>
+3. 도착 뒤: 최근 3주 놓침이 평소보다 늘었으면 본인에게 먼저, 수첩 도장 칸으로 보여 준다.<br><br>
+<sub>에뮬레이터 실제 화면(v0.6.0)을 녹화했다.</sub>
 </td>
 </tr>
 </table>
@@ -120,10 +120,14 @@
 
 현대차 광고 "Brilliant Moments"(인도, 두 편 각각 유튜브 2억 뷰)와 "Live Brilliant"가 담은 일상의 빛나는 순간, 맑은 낮에서 출발했다. 오래운전은 점수표가 아니라 평생 써 온 운전 수첩처럼 보이게 했다.
 
-- **운전 수첩**: 회전 한 번이 도장 한 칸이다. 찍힌 칸은 Hyundai Blue, 깜빡이를 놓친 회전은 금색 테두리의 빈 칸으로 남는다. 금색은 이 빈 칸에만 쓴다.
-- **맑은 낮**: 바탕은 Sky Blue를 옅게 깐 #EFF4F9, 카드는 흰 종이. 고령 운전자가 읽기 쉽게 진한 남색 글자와 큰 글씨(본문 최소 26)를 유지했다.
+세 앱이 같은 차 안에서 같은 앱처럼 보이지 않도록 화면 문법부터 나눴다. 오래운전은 **종이 수첩과 펼친 앨범**이다.
+
+- **수첩 한 장**: 모든 화면이 하늘색 바탕 위의 흰 종이 한 장이다. 맨 위에 날짜·제목과 굵은 밑줄 한 줄, 그 아래로 줄 친 목록과 표. 카드를 겹겹이 쌓지 않는다.
+- **도장 칸**: 회전 한 번이 동그란 도장 한 칸이다. 찍힌 칸은 Hyundai Blue, 깜빡이를 놓친 회전은 금색 점선 동그라미로 남는다. 금색은 이 빈 칸에만 쓴다.
+- **출발 인사**: 자주 가는 곳은 버튼 대신 라디오 동그라미가 달린 줄 친 목록이다. 손가락이 닿는 줄 전체가 눌린다.
 - **가족과 같이 보기**: 가로 2칸 화면에 펼친 앨범처럼 왼쪽 장은 4주 기록, 오른쪽 장은 습관·함께 정할 조건.
-- 서체는 Pleos 공식 Asta Sans.
+- 고령 운전자가 읽기 쉽게 진한 남색 글자와 큰 글씨(본문 최소 26)를 유지했다.
+- 서체는 Asta Sans(42dot, OFL). 현대차 광고에 쓰이는 Hyundai Sans는 배포할 수 없는 전용 서체라, Pleos가 쓰는 같은 계열 공개 서체로 세 앱을 통일했다. 한국어는 어절 단위로만 줄을 바꾼다(`WordBreak.Phrase`).
 
 ## 시스템 구조
 
@@ -239,7 +243,7 @@ adb shell am start -n com.botdue.orae/.MainActivity --es screen Family --ez cond
 - [x] 디자인 "맑은 낮 운전 수첩": 하늘색 바탕, 흰 종이 카드, 펼친 앨범 (v0.4.0)
 - [x] 시연 영상 v6: v0.4.0 화면으로 다시 녹화
 - [x] 기준선 정확도: 운전석 위치로 다른 가족 운전 빼기, 맑은 낮·비·해 진 뒤 가리기, 깜빡이 켜는 때·좌회전 비율, 테스트 35개 (v0.5.0)
-- [ ] 시연 영상과 움직이는 장면을 v0.5.0 화면으로 다시 녹화 (차 안 목업 4장은 v0.5.0으로 교체함)
+- [x] 디자인 v2 "종이 수첩": 세 앱이 겹치지 않게 화면 문법을 나눔. 흰 종이 한 장과 밑줄 제목, 동그란 도장 칸, 줄 친 출발 목록, 시연 영상 v7(앨범 문법)·움직이는 장면 다시 녹화 (v0.6.0)
 - [ ] Pleos Connect Emulator에서 SDK 콜백 연결 (`PleosSignalSource`)
 - [ ] STT·TTS 음성, 휴게소 경유지 실제 설정, 로컬 DB 저장
 - [ ] 몇 주치 주행을 빠르게 재생하는 시연 도구 (2차 PT용)

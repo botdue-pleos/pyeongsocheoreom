@@ -1,5 +1,7 @@
 package com.botdue.orae.ui
 
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -83,14 +85,24 @@ fun PixelLogo(sizeDp: Dp = 34.px) {
     }
 }
 
+/** 수첩 머리: 날짜·제목은 왼쪽, 보조 정보는 오른쪽, 아래에 진한 줄 하나 */
 @Composable
 fun Header(title: String, trailing: String? = null) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        PixelLogo()
-        T(title, 30.tx, Modifier.padding(start = 14.px).weight(1f), FontWeight.Bold)
-        if (trailing != null) T(trailing, 30.tx, color = C.Sub)
+    Column(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            T(title, 30.tx, Modifier.weight(1f), FontWeight.Bold)
+            if (trailing != null) T(trailing, 28.tx, color = C.Sub)
+        }
+        Spacer(Modifier.height(18.px))
+        Box(Modifier.fillMaxWidth().height(3.px).background(C.Ink))
     }
 }
+
+/** 하늘색 바탕 위에 흰 수첩 지면 한 장 */
+fun Modifier.page(): Modifier = this
+    .background(C.Ground)
+    .padding(28.px)
+    .background(C.Card, RoundedCornerShape(12.px))
 
 @Composable
 fun Divider() {
@@ -120,7 +132,7 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Un
     Box(
         modifier
             .height(116.px)
-            .background(C.Ink, RoundedCornerShape(16.px))
+            .background(C.Ink, RoundedCornerShape(58.px))
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { T(text, 36.tx, weight = FontWeight.Bold, color = C.Ground) }
@@ -131,7 +143,7 @@ fun OutlineButton(text: String, modifier: Modifier = Modifier, onClick: () -> Un
     Box(
         modifier
             .height(116.px)
-            .border(BorderStroke(3.px, C.Ink), RoundedCornerShape(16.px))
+            .border(BorderStroke(3.px, C.Ink), RoundedCornerShape(58.px))
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { T(text, 34.tx, weight = FontWeight.SemiBold) }
@@ -171,28 +183,32 @@ fun TurnDots(
     }
 }
 
+/** 도장 한 칸: 찍힌 도장은 남색 동그라미, 놓친 회전은 금색 점선 동그라미 */
 @Composable
 private fun Cell(on: Boolean, modifier: Modifier, ring: Dp, radius: Dp) {
-    val shape = RoundedCornerShape(radius)
-    Box(
-        modifier
-            .aspectRatio(1f)
-            .then(
-                if (on) Modifier.background(C.Ink, shape)
-                else Modifier.border(BorderStroke(ring, C.Gold), shape)
+    Canvas(modifier.aspectRatio(1f)) {
+        val r = size.minDimension / 2
+        if (on) {
+            drawCircle(C.Ink, r)
+        } else {
+            val w = ring.toPx().coerceAtMost(r * 0.28f)
+            drawCircle(
+                C.Gold, r - w / 2,
+                style = Stroke(width = w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(w * 1.3f, w * 0.9f))),
             )
-    )
+        }
+    }
 }
 
 @Composable
 fun Legend() {
     Row(horizontalArrangement = Arrangement.spacedBy(36.px)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(26.px).background(C.Ink, RoundedCornerShape(6.px)))
+            Cell(true, Modifier.size(28.px), 4.px, 0.px)
             T("깜빡이 켠 회전", 26.tx, Modifier.padding(start = 12.px), color = C.Sub)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(26.px).border(BorderStroke(5.px, C.Gold), RoundedCornerShape(6.px)))
+            Cell(false, Modifier.size(28.px), 4.px, 0.px)
             T("놓친 회전", 26.tx, Modifier.padding(start = 12.px), color = C.Sub)
         }
     }

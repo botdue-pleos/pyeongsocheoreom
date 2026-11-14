@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 야간 모드: 앱이 그려지기 전 창 바탕도 짙은 남색으로 (흰 화면이 번쩍이지 않게) -->
+    <style name="Theme.Orae" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/light_sand</item>
+        <item name="android:statusBarColor">@color/light_sand</item>
+        <item name="android:navigationBarColor">@color/light_sand</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+    <color name="light_sand">#0B1B30</color>
+</resources>

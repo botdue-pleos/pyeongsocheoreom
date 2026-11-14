@@ -41,7 +41,7 @@ fun ChangeScreen(
             .verticalScroll(rememberScrollState())
             .padding(start = 64.px, end = 64.px, top = 64.px, bottom = 56.px)
     ) {
-        Header("오래운전", "주차 중")
+        Header("평소처럼", "주차 중")
         Spacer(Modifier.height(48.px))
         T("요즘 ${summary.directionNoun}할 때\n깜빡이를 자주 놓치셨어요", 60.tx, weight = FontWeight.Bold, lineHeight = 1.25f)
         Spacer(Modifier.height(22.px))

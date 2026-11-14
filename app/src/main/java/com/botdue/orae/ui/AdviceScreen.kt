@@ -30,7 +30,7 @@ fun AdviceScreen(place: Place, onLater: () -> Unit, onGoAnyway: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(start = 64.px, end = 64.px, top = 64.px, bottom = 56.px)
     ) {
-        Header("오래운전", "오후 7:10")
+        Header("평소처럼", "오후 7:10")
         Spacer(Modifier.height(72.px))
         T("해가 졌어요.\n${place.name}에는\n내일 낮에 가실까요?", 64.tx, weight = FontWeight.Bold, lineHeight = 1.22f)
         Spacer(Modifier.height(28.px))

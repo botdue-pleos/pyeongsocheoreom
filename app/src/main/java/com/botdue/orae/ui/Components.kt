@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 
 @Composable
@@ -88,16 +89,21 @@ fun PixelLogo(sizeDp: Dp = 34.px) {
     }
 }
 
-/** 수첩 머리: 날짜·제목은 왼쪽, 보조 정보는 오른쪽, 아래에 진한 줄 하나 */
+/**
+ * 수첩 머리: 날짜·제목은 왼쪽, 보조 정보는 오른쪽, 아래에 진한 줄 하나.
+ * [onGround]면 종이 밖 바탕 위에 쓰므로 밤에도 읽히는 [C.OnGround]로 쓴다.
+ */
 @Composable
-fun Header(title: String, trailing: String? = null) {
+fun Header(title: String, trailing: String? = null, onGround: Boolean = false) {
+    val ink = if (onGround) C.OnGround else C.Ink
+    val sub = if (onGround) C.OnGround.copy(alpha = 0.8f) else C.Sub
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            T(title, 30.tx, Modifier.weight(1f), FontWeight.Bold)
-            if (trailing != null) T(trailing, 28.tx, color = C.Sub)
+            T(title, 30.tx, Modifier.weight(1f), FontWeight.Bold, ink)
+            if (trailing != null) T(trailing, 28.tx, color = sub)
         }
         Spacer(Modifier.height(18.px))
-        Box(Modifier.fillMaxWidth().height(3.px).background(C.Ink))
+        Box(Modifier.fillMaxWidth().height(3.px).background(ink))
     }
 }
 
@@ -138,7 +144,7 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Un
             .background(C.Ink, RoundedCornerShape(58.px))
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { T(text, 36.tx, weight = FontWeight.Bold, color = C.Ground) }
+    ) { T(text, 36.tx, weight = FontWeight.Bold, color = C.OnInk) }
 }
 
 @Composable
@@ -189,7 +195,10 @@ fun TurnDots(
     }
 }
 
-/** 도장 한 칸: 찍힌 도장은 남색 동그라미, 놓친 회전은 금색 점선 동그라미, 다른 분 운전(null)은 옅은 회색 */
+/**
+ * 도장 한 칸: 찍힌 도장은 남색 동그라미, 놓친 회전은 금색 점선 동그라미, 다른 분 운전(null)은 옅은 회색.
+ * 점선이 가늘면 흰 종이 위에서 잘 안 보여서, 선은 4.5px 아래로 내리지 않고 점선 마디를 길게 한다.
+ */
 @Composable
 private fun Cell(on: Boolean?, modifier: Modifier, ring: Dp, radius: Dp) {
     Canvas(modifier.aspectRatio(1f)) {
@@ -198,10 +207,10 @@ private fun Cell(on: Boolean?, modifier: Modifier, ring: Dp, radius: Dp) {
             true -> drawCircle(C.Ink, r)
             null -> drawCircle(C.Other, r * 0.86f)
             false -> {
-                val w = ring.toPx().coerceAtMost(r * 0.28f)
+                val w = maxOf(ring.toPx(), 3.dp.toPx() /* 4.5px */).coerceAtMost(r * 0.34f)
                 drawCircle(
                     C.Gold, r - w / 2,
-                    style = Stroke(width = w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(w * 1.3f, w * 0.9f))),
+                    style = Stroke(width = w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(w * 1.8f, w * 0.8f))),
                 )
             }
         }

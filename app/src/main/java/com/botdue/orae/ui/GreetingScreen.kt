@@ -63,7 +63,10 @@ fun CareCenter.toPlace() = Place(name, minutes, distanceKm, pastTrips = 0)
 
 /**
  * 출발 인사: "오늘 어디 가세요?"를 묻고 자주 가는 곳을 크게 보여준다.
- * 실제 차량에서는 TTS로 묻고 STT로 답을 받아 목적지를 정한다.
+ * 실제 차량에서는 TTS로 묻고 STT(SpeechToText SDK, ON_DEVICE)로 답을 받아 목적지를 정한다.
+ * 출발 직전이라 인사와 목적지 고르기만 둔다. 이번 주 도장 줄과 "자주 놓치셨어요" 같은 말은
+ * 출발 전에 기를 꺾지 않도록 주차한 뒤 화면(ParkedScreen)에서만 보여준다.
+ * [clean](캡처 모드)이면 맨 아래 "시연:" 전환 글자를 숨긴다.
  */
 @Composable
 fun GreetingScreen(
@@ -71,6 +74,7 @@ fun GreetingScreen(
     reminderOn: Boolean,
     evening: Boolean,
     notice: String?,
+    clean: Boolean = false,
     onPlace: (Place) -> Unit,
     onSwitchScenario: () -> Unit,
     onSwitchTime: () -> Unit,
@@ -98,32 +102,15 @@ fun GreetingScreen(
         PLACES.forEachIndexed { i, place ->
             PlaceButton(place, filled = i == 0) { onPlace(place) }
         }
+        if (notice != null || reminderOn) Spacer(Modifier.height(20.px))
         if (notice != null) {
             T(notice, 28.tx, weight = FontWeight.SemiBold, color = C.GoldText)
         } else if (reminderOn) {
             T("회전하기 전에 깜빡이를 한 번 더 알려드려요.", 28.tx, color = C.Sub)
         }
 
-        Spacer(Modifier.height(20.px))
-        Divider()
-        Spacer(Modifier.height(28.px))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            T(
-                if (summary.change != null) "이번 주는 깜빡이를 자주 놓치셨어요" else "이번 주 운전은 평소와 비슷해요",
-                30.tx, Modifier.weight(1f), FontWeight.Bold,
-            )
-            T("회전 ${summary.thisWeek.turns}번", 26.tx, color = C.Sub)
-        }
-        Spacer(Modifier.height(18.px))
-        TurnDots(
-            turnCells(summary.thisWeek.turns, summary.thisWeek.missed), columns = 15, gap = 8.px,
-            description = "이번 주 회전 ${summary.thisWeek.turns}번 중 놓친 회전 ${summary.thisWeek.missed}번",
-            ring = 4.px, radius = 5.px,
-        )
-        Spacer(Modifier.height(18.px))
-        T("칸 하나가 회전 한 번이에요. 빈 칸은 깜빡이를 놓친 회전이에요.", 26.tx, color = C.Sub)
-
-        Spacer(Modifier.height(16.px))
+        if (clean) return@Column
+        Spacer(Modifier.height(40.px))
         // 시연용: 첫 4주(기준선 만드는 중)와 7주째(변화 감지), 아침과 저녁 출발을 바꿔 본다
         Row(horizontalArrangement = Arrangement.spacedBy(36.px)) {
             DemoLink(if (summary.change != null) "시연: 첫 4주 기록" else "시연: 7주째 기록", onSwitchScenario)

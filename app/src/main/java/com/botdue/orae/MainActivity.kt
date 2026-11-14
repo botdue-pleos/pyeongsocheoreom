@@ -1,16 +1,21 @@
 package com.botdue.orae
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 import com.botdue.orae.engine.DemoScenario
 import com.botdue.orae.engine.Advice
 import com.botdue.orae.engine.Condition
@@ -20,6 +25,7 @@ import com.botdue.orae.engine.ConditionRecord
 import com.botdue.orae.engine.NextStepAdvisor
 import com.botdue.orae.engine.Trip
 import com.botdue.orae.ui.AdviceScreen
+import com.botdue.orae.ui.C
 import com.botdue.orae.ui.CARE_CENTERS
 import com.botdue.orae.ui.ChangeScreen
 import com.botdue.orae.ui.DRIVER_AGE
@@ -38,15 +44,34 @@ enum class Screen { Greeting, Advice, Driving, Parked, Change, Family }
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 화면 캡처·영상용: adb shell am start ... --es screen Family --ez conds true --ez kept true
+        // 화면 캡처·영상용: adb shell am start ... --es screen Family --ez conds true --ez kept true --ez clean true --ez night true
         val start = StartAt(
             screen = intent.getStringExtra("screen")?.let { runCatching { Screen.valueOf(it) }.getOrNull() } ?: Screen.Greeting,
             place = intent.getIntExtra("place", 0),
             evening = intent.getBooleanExtra("evening", false),
             conds = intent.getBooleanExtra("conds", false),
             kept = intent.getBooleanExtra("kept", false),
+            clean = intent.getBooleanExtra("clean", false),
+            night = intent.getBooleanExtra("night", false),
+            wander = intent.getBooleanExtra("wander", false),
         )
-        setContent { OraeApp(start) }
+        // 첫 장면부터 밤 색으로 그리도록 미리 정한다 (흰 화면이 한 번 번쩍이지 않게)
+        val systemNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        C.night = start.night || systemNight
+        setContent {
+            // 시스템 야간 모드가 바뀌면(uiMode는 configChanges라 액티비티가 다시 만들어지지 않는다) 여기서 따라간다
+            val night = start.night || isSystemInDarkTheme()
+            SideEffect {
+                C.night = night
+                window.statusBarColor = C.Ground.toArgb()
+                window.navigationBarColor = C.Ground.toArgb()
+                WindowCompat.getInsetsController(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = !night
+                    isAppearanceLightNavigationBars = !night
+                }
+            }
+            OraeApp(start)
+        }
     }
 }
 
@@ -58,6 +83,12 @@ data class StartAt(
     val conds: Boolean = false,
     /** 조건을 지킨 기록(밤 출발 미룸·휴게소 경유)이 있는 상태로 시작 */
     val kept: Boolean = false,
+    /** 캡처 모드: "시연:" 전환 글자와 주행 화면 시연 버튼을 숨긴다 */
+    val clean: Boolean = false,
+    /** 시스템 설정과 상관없이 밤 색으로 */
+    val night: Boolean = false,
+    /** 주행 화면을 경로 재탐색 두 번 뒤(길 헤맴)로 시작. --ei place 2(큰딸 집)와 함께 */
+    val wander: Boolean = false,
 )
 
 @Composable
@@ -110,6 +141,7 @@ fun OraeApp(start: StartAt = StartAt()) {
                 reminderOn = reminderOn,
                 evening = evening,
                 notice = notice,
+                clean = start.clean,
                 onPlace = { depart(it) },
                 onSwitchScenario = {
                     scenario = if (scenario == DemoScenario.CHANGED) DemoScenario.STABLE else DemoScenario.CHANGED
@@ -128,7 +160,7 @@ fun OraeApp(start: StartAt = StartAt()) {
                     screen = Screen.Driving
                 },
             )
-            Screen.Driving -> DrivingScreen(place, reminderOn, restStop) {
+            Screen.Driving -> DrivingScreen(place, reminderOn, restStop, clean = start.clean, wander = start.wander && start.screen == Screen.Driving) {
                 // 시연: 도착하면 휴게소 경유지를 지난 것으로 본다. 실제로는 NaviHelper 경유지 통과로 판단
                 if (restStop != null) events = events + ConditionEvent(Condition.REST_ON_HIGHWAY, followed = true)
                 screen = Screen.Parked

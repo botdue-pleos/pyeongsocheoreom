@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,6 +38,7 @@ import com.botdue.orae.engine.Kept
 /**
  * 가족과 같이 보기 (주차 중, 가족이 동승했을 때).
  * 가로 2칸 창이면 좌우로, 세로 1칸이면 위아래로 놓는다.
+ * 어느 쪽이든 아래 버튼은 스크롤 밖에 고정해 창 밖으로 잘리지 않게 한다.
  */
 @Composable
 fun FamilyScreen(
@@ -53,19 +55,21 @@ fun FamilyScreen(
             .background(C.Ground)
     ) {
         val wide = maxWidth > maxHeight
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 72.px, end = 72.px, top = 64.px, bottom = 56.px)
-        ) {
-            val (from, to) = summary.recentRange
-            Header("오래운전 가족과 같이 보기", if (wide) "${from.korean()}부터 ${to.korean()}까지" else null)
-            Spacer(Modifier.height(if (wide) 36.px else 48.px))
-            if (wide) {
-                // 가로 2칸: 펼친 앨범처럼 왼쪽 장은 기록, 오른쪽 장은 습관·조건·버튼
-                Row(horizontalArrangement = Arrangement.spacedBy(20.px)) {
-                    Column(Modifier.weight(1f).background(C.Card, RoundedCornerShape(18.px)).padding(48.px)) {
+        val (from, to) = summary.recentRange
+        if (wide) {
+            // 가로 2칸: 펼친 앨범처럼 왼쪽 장은 기록, 오른쪽 장은 습관·조건·버튼. 장마다 따로 스크롤한다
+            Column(Modifier.fillMaxSize().padding(start = 72.px, end = 72.px, top = 48.px, bottom = 48.px)) {
+                Header("평소처럼 · 가족과 같이 보기", "${from.korean()}부터 ${to.korean()}까지", onGround = true)
+                Spacer(Modifier.height(28.px))
+                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(20.px)) {
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(C.Card, RoundedCornerShape(18.px))
+                            .verticalScroll(rememberScrollState())
+                            .padding(44.px)
+                    ) {
                         Weeks(summary)
                         Spacer(Modifier.height(32.px))
                         T(DISCLAIMER, 26.tx, color = C.Sub)
@@ -74,27 +78,47 @@ fun FamilyScreen(
                             KeptRecord(kept)
                         }
                     }
-                    Column(Modifier.weight(1f).background(C.Card, RoundedCornerShape(18.px)).padding(48.px)) {
-                        Habits(summary)
-                        Spacer(Modifier.height(36.px))
-                        Conditions(conditions, onToggle)
-                        Spacer(Modifier.height(28.px))
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(C.Card, RoundedCornerShape(18.px))
+                            .padding(36.px)
+                    ) {
+                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                            Habits(summary)
+                            Spacer(Modifier.height(28.px))
+                            Conditions(conditions, onToggle)
+                        }
+                        Spacer(Modifier.height(24.px))
                         Buttons(onBack, onConfirm, confirmWeight = 1f)
                     }
                 }
-            } else {
-                Weeks(summary)
-                Spacer(Modifier.height(56.px))
-                Habits(summary)
-                if (kept.isNotEmpty()) {
+            }
+        } else {
+            // 세로 1칸: 다른 화면처럼 종이 한 장. 기록과 조건은 스크롤, 버튼은 아래에 고정
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .page()
+                    .padding(start = 56.px, end = 56.px, top = 56.px, bottom = 44.px)
+            ) {
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                    Header("평소처럼 · 가족과 같이 보기")
+                    Spacer(Modifier.height(40.px))
+                    Weeks(summary)
                     Spacer(Modifier.height(48.px))
-                    KeptRecord(kept)
+                    Habits(summary)
+                    if (kept.isNotEmpty()) {
+                        Spacer(Modifier.height(44.px))
+                        KeptRecord(kept)
+                    }
+                    Spacer(Modifier.height(44.px))
+                    Conditions(conditions, onToggle)
+                    Spacer(Modifier.height(28.px))
+                    T(DISCLAIMER, 26.tx, color = C.Sub)
                 }
-                Spacer(Modifier.height(48.px))
-                Conditions(conditions, onToggle)
-                Spacer(Modifier.height(36.px))
-                T(DISCLAIMER, 26.tx, color = C.Sub)
-                Spacer(Modifier.height(28.px))
+                Spacer(Modifier.height(24.px))
                 Buttons(onBack, onConfirm, confirmWeight = 2f)
             }
         }
@@ -202,21 +226,23 @@ private fun Habits(summary: Summary) {
         LeadRuler(lead.usualMs, lead.recentMs, summary)
         Spacer(Modifier.height(28.px))
     }
-    if (left != null) {
-        ChartTitle("회전 중 좌회전", if (left.fewer) "줄었어요" else "같아요", left.fewer)
+    // 좌회전 비율은 줄었을 때만 막대로 그린다. 같으면 아래 표 한 줄로 줄여 조건과 버튼이 한 화면에 들어오게 한다
+    if (left != null && left.fewer) {
+        ChartTitle("회전 중 좌회전", "줄었어요", true)
         ShareBars(left.usual, left.recent, summary)
-        Spacer(Modifier.height(40.px))
+        Spacer(Modifier.height(32.px))
     }
     T("다른 운전 습관", 30.tx, weight = FontWeight.Bold)
-    Spacer(Modifier.height(20.px))
+    Spacer(Modifier.height(16.px))
     Divider()
     HabitRow("한 주 기준", "평소", "최근", "달라진 점", header = true)
     if (lead == null) HabitRow("깜빡이 켜는 때", "기록 중", "-", "-")
-    if (left == null) HabitRow("회전 중 좌회전", "기록 중", "-", "-")
-    // 시연용 값: 실제로는 NaviHelper 재탐색, Door·기어, Safety 경고등, 전조등 신호로 센다
+    when {
+        left == null -> HabitRow("회전 중 좌회전", "기록 중", "-", "-")
+        !left.fewer -> HabitRow("회전 중 좌회전", summary.percent(left.usual), summary.percent(left.recent), "같아요")
+    }
+    // 시연용 값: 실제로는 NaviHelper 재탐색과 전조등 신호로 센다
     HabitRow("다니던 길 다시 찾기", "0번", if (changed) "1번" else "0번", if (changed) "조금 늘었어요" else "같아요", highlight = changed)
-    HabitRow("P단 전에 문 열기", "0번", "0번", "같아요")
-    HabitRow("경고등 확인까지", "2분", "2분", "같아요")
     HabitRow("해 진 뒤 운전", "3번", "2번", "줄었어요")
 }
 
@@ -227,7 +253,7 @@ private fun HabitRow(a: String, b: String, c: String, d: String, header: Boolean
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = if (header) 12.px else 18.px),
+            .padding(vertical = if (header) 8.px else 12.px),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         T(a, size, Modifier.weight(1.6f), color = color)
@@ -240,22 +266,20 @@ private fun HabitRow(a: String, b: String, c: String, d: String, header: Boolean
 
 @Composable
 private fun Conditions(selected: Set<Condition>, onToggle: (Condition) -> Unit) {
+    // 이미 종이 위라 종이를 한 겹 더 깔지 않는다
     Column(
-        Modifier
-            .fillMaxWidth()
-            .background(C.Card, RoundedCornerShape(18.px))
-            .padding(40.px),
-        verticalArrangement = Arrangement.spacedBy(14.px),
+        Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.px),
     ) {
-        T("같이 정해 볼 운전 조건", 36.tx, weight = FontWeight.Bold)
-        Spacer(Modifier.height(10.px))
+        T("같이 정해 볼 운전 조건", 32.tx, weight = FontWeight.Bold)
+        Spacer(Modifier.height(4.px))
         Condition.entries.forEach { c ->
             val on = c in selected
             val shape = RoundedCornerShape(14.px)
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .height(92.px)
+                    .height(80.px)
                     .then(if (on) Modifier.background(C.Ink, shape) else Modifier.border(BorderStroke(3.px, C.Ink), shape))
                     .clickable(role = Role.Checkbox) { onToggle(c) }
                     .semantics { this.selected = on }
@@ -263,7 +287,7 @@ private fun Conditions(selected: Set<Condition>, onToggle: (Condition) -> Unit) 
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.size(30.px)) { if (on) Check() }
-                T(c.label, 30.tx, Modifier.padding(start = 18.px), FontWeight.SemiBold, if (on) C.Ground else C.Ink)
+                T(c.label, 30.tx, Modifier.padding(start = 18.px), FontWeight.SemiBold, if (on) C.OnInk else C.Ink)
             }
         }
     }
@@ -275,7 +299,7 @@ private fun Check() {
         val u = size.width / 24f
         drawPath(
             Path().apply { moveTo(5 * u, 12.5f * u); lineTo(10 * u, 17 * u); lineTo(19 * u, 7 * u) },
-            C.Ground, style = Stroke(3 * u, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            C.OnInk, style = Stroke(3 * u, cap = StrokeCap.Round, join = StrokeJoin.Round),
         )
     }
 }

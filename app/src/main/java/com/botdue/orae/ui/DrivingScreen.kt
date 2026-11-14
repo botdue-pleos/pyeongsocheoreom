@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,13 +48,26 @@ import kotlinx.coroutines.delay
  * - 깜빡이 알림을 켰으면 회전 200m 앞부터 "오른쪽 깜빡이를 켜 주세요"가 뜬다 (실제 차량에서는 TTS로도 말한다).
  * - 함께 정한 조건으로 휴게소를 경유지에 넣었으면 그 사실을 보여준다.
  * - 자주 다니던 길에서 경로 재탐색이 반복되면 집으로 안내할지 묻는다.
- * 시연에서는 남은 거리가 1초마다 줄어들고, "길 벗어나기"가 NaviHelper onReRouteEnded를 대신한다.
+ * 시연에서는 남은 거리가 1초마다 줄어들고, "시연: 경로 재탐색"이 NaviHelper onReRouteEnded를,
+ * "시연: 도착(P단)"이 기어 P 신호를 대신한다. [clean](캡처 모드)이면 두 시연 버튼을 숨긴다.
+ * [wander]면 경로 재탐색 두 번 뒤로 시작한다 (캡처 모드에서 길 헤맴 화면을 열기 위해).
  */
 @Composable
-fun DrivingScreen(place: Place, reminderOn: Boolean, restStop: String?, onPark: () -> Unit) {
+fun DrivingScreen(
+    place: Place,
+    reminderOn: Boolean,
+    restStop: String?,
+    clean: Boolean = false,
+    wander: Boolean = false,
+    onPark: () -> Unit,
+) {
     var distance by remember { mutableIntStateOf(400) }
     var target by remember { mutableStateOf(place) }
-    val reRoutes = remember { mutableStateListOf<Long>() }
+    val reRoutes = remember {
+        mutableStateListOf<Long>().apply {
+            if (wander) System.currentTimeMillis().let { addAll(listOf(it - 60_000, it)) }
+        }
+    }
     val wandering = WanderingDetector().isWandering(target.pastTrips, reRoutes)
     LaunchedEffect(Unit) {
         while (true) {
@@ -83,10 +97,13 @@ fun DrivingScreen(place: Place, reminderOn: Boolean, restStop: String?, onPark: 
         }
 
         Spacer(Modifier.height(if (restStop != null) 76.px else 120.px))
-        RightTurnArrow()
-        Spacer(Modifier.height(32.px))
-        T("${distance}m", 168.tx, weight = FontWeight.ExtraBold, lineHeight = 1f)
-        Spacer(Modifier.height(22.px))
+        // 회전 화살표는 남은 거리 숫자 옆, 같은 높이에. 한눈에 "어디서·어느 쪽"을 같이 읽게 한다
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RightTurnArrow()
+            Spacer(Modifier.width(24.px))
+            T("${distance}m", 168.tx, weight = FontWeight.ExtraBold, lineHeight = 1f)
+        }
+        Spacer(Modifier.height(28.px))
         T("오른쪽으로 도세요", 60.tx, weight = FontWeight.Bold)
         if (reRoutes.isNotEmpty()) {
             Spacer(Modifier.height(16.px))
@@ -111,10 +128,12 @@ fun DrivingScreen(place: Place, reminderOn: Boolean, restStop: String?, onPark: 
             }
             Spacer(Modifier.height(32.px))
         }
-        // 시연용: 실제 차량에서는 NaviHelper 재탐색 이벤트와 기어 P 신호가 대신한다
-        Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
-            OutlineButton("길 벗어나기", Modifier.weight(1f)) { reRoutes += System.currentTimeMillis() }
-            OutlineButton("도착했어요", Modifier.weight(1f), onPark)
+        // 시연용: 실제 차량에서는 NaviHelper 재탐색 이벤트와 기어 P 신호가 대신한다. 캡처 모드에서는 숨긴다
+        if (!clean) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
+                OutlineButton("시연: 경로 재탐색", Modifier.weight(1f)) { reRoutes += System.currentTimeMillis() }
+                OutlineButton("시연: 도착(P단)", Modifier.weight(1f), onPark)
+            }
         }
     }
 }
@@ -136,7 +155,7 @@ private fun ColumnScope.WanderingCard(onHome: () -> Unit, onContinue: () -> Unit
 private fun RightTurnArrow() {
     Canvas(
         Modifier
-            .size(230.px)
+            .size(190.px)
             .semantics { contentDescription = "우회전" }
     ) {
         val u = size.width / 24f

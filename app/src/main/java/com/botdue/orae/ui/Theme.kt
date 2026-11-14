@@ -1,6 +1,9 @@
 package com.botdue.orae.ui
 
 import android.content.res.AssetManager
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -17,22 +20,34 @@ import androidx.compose.ui.unit.sp
  * 현대차 CI 색. 광고 "Brilliant Moments"의 맑은 낮: 하늘색(Sky Blue)을 옅게 깐 바탕에 흰 종이 카드,
  * 진한 글자(Hyundai Blue). 운전 수첩처럼 회전 한 번이 도장 한 칸이다.
  * 금색은 "깜빡이를 놓친 회전"(빈 도장 칸) 한 곳에만 쓴다.
+ *
+ * 밤에는 큰 흰 화면이 노안 운전자에게 눈부시다. [night]이면 짙은 남색 바탕에 밝기를 낮춘 크림색 종이로 바꾼다.
+ * 글자는 그대로 남색이라 수첩 문법은 같고, 대비는 본문 8:1, 보조 글자 5:1 이상을 지킨다.
+ * [night]은 스냅숏 상태라 바뀌면 이 색을 읽은 화면과 그림이 다시 그려진다.
  */
 object C {
-    val Ground = Color(0xFFE6EEF6)
-    val Ink = Color(0xFF002C5F)
-    val Sub = Color(0xFF4A5D73)
-    val Line = Color(0xFFD6E1EC)
-    /** 수첩 종이 */
-    val Card = Color(0xFFFFFFFF)
+    /** 시스템 야간 모드이거나 `--ez night true`로 시작했을 때 */
+    var night: Boolean by mutableStateOf(false)
+
+    val Ground: Color get() = if (night) Color(0xFF0B1B30) else Color(0xFFE6EEF6)
+    val Ink: Color get() = Color(0xFF002C5F)
+    val Sub: Color get() = if (night) Color(0xFF3B4A5C) else Color(0xFF4A5D73)
+    val Line: Color get() = if (night) Color(0xFFB3A78D) else Color(0xFFD6E1EC)
+    /** 수첩 종이. 밤에는 흰색 대신 밝기를 낮춘 크림색 */
+    val Card: Color get() = if (night) Color(0xFFD4C9B1) else Color(0xFFFFFFFF)
     /** 종이 위에 붙인 쪽지 (조건·알림) */
-    val Note = Color(0xFFEFF4F9)
-    val Gold = Color(0xFFA36B4F)
+    val Note: Color get() = if (night) Color(0xFFC6BA9F) else Color(0xFFEFF4F9)
+    /** 놓친 회전 점선 동그라미. 옅으면 안 보여서 진하게 (흰 종이 대비 5:1 넘게) */
+    val Gold: Color get() = if (night) Color(0xFF7A4528) else Color(0xFF94593B)
     /** 금색 글자용: 바탕 대비 4.5:1 이상 */
-    val GoldText = Color(0xFF7E4E37)
-    val SkyBlue = Color(0xFFAACAE6)
+    val GoldText: Color get() = if (night) Color(0xFF66381F) else Color(0xFF7E4E37)
+    val SkyBlue: Color get() = if (night) Color(0xFF7D9AB6) else Color(0xFFAACAE6)
     /** 다른 분이 운전한 회전 (빼고 센 칸) */
-    val Other = Color(0xFFC9D4E0)
+    val Other: Color get() = if (night) Color(0xFFA9A18E) else Color(0xFFC9D4E0)
+    /** 남색으로 채운 버튼·칸 위의 글자 */
+    val OnInk: Color get() = if (night) Color(0xFFE3D9C3) else Color(0xFFE6EEF6)
+    /** 종이 밖 바탕 위에 바로 쓰는 글자 (가족 화면 머리) */
+    val OnGround: Color get() = if (night) Color(0xFFD4C9B1) else Color(0xFF002C5F)
 }
 
 /**

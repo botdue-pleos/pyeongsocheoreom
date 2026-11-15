@@ -1,16 +1,21 @@
 package com.botdue.orae.ui
 
 import android.content.res.AssetManager
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -74,3 +79,17 @@ val LocalFont = staticCompositionLocalOf<FontFamily> { FontFamily.Default }
  */
 val Int.px: Dp get() = (this / 1.5f).dp
 val Int.tx: TextUnit get() = maxOf(this / 1.5f, 20f).sp
+
+/**
+ * 설계 기준 창(세로 1칸 613×887dp, 가로 2칸 1247×887dp — 920×1330·1870×1330px, 240dpi)을 실제 앱 창 크기에 맞춰 통째로 비례 확대한다.
+ * Pleos Connect v2.1.0 에뮬레이터(2560×1440, 160dpi)의 세로 1칸 창은 약 841×1210dp라, 이대로 두면 화면이 작게 그려지고 아래가 빈다.
+ */
+@Composable
+fun FitWindow(content: @Composable () -> Unit) {
+    val c = LocalConfiguration.current
+    val w = c.screenWidthDp.toFloat()
+    val h = c.screenHeightDp.toFloat()
+    val k = (if (w < h) minOf(w / 613f, h / 887f) else minOf(w / 1247f, h / 887f)).coerceIn(0.5f, 3f)
+    val d = LocalDensity.current
+    CompositionLocalProvider(LocalDensity provides Density(d.density * k, d.fontScale)) { content() }
+}

@@ -38,6 +38,7 @@ import com.botdue.orae.ui.ParkedScreen
 import com.botdue.orae.ui.Summary
 import com.botdue.orae.ui.astaSans
 import com.botdue.orae.ui.toPlace
+import com.botdue.orae.ui.FitWindow
 
 enum class Screen { Greeting, Advice, Driving, Parked, Change, Family }
 
@@ -59,18 +60,20 @@ class MainActivity : ComponentActivity() {
         val systemNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         C.night = start.night || systemNight
         setContent {
-            // 시스템 야간 모드가 바뀌면(uiMode는 configChanges라 액티비티가 다시 만들어지지 않는다) 여기서 따라간다
-            val night = start.night || isSystemInDarkTheme()
-            SideEffect {
-                C.night = night
-                window.statusBarColor = C.Ground.toArgb()
-                window.navigationBarColor = C.Ground.toArgb()
-                WindowCompat.getInsetsController(window, window.decorView).apply {
-                    isAppearanceLightStatusBars = !night
-                    isAppearanceLightNavigationBars = !night
+            FitWindow {
+                // 시스템 야간 모드가 바뀌면(uiMode는 configChanges라 액티비티가 다시 만들어지지 않는다) 여기서 따라간다
+                val night = start.night || isSystemInDarkTheme()
+                SideEffect {
+                    C.night = night
+                    window.statusBarColor = C.Ground.toArgb()
+                    window.navigationBarColor = C.Ground.toArgb()
+                    WindowCompat.getInsetsController(window, window.decorView).apply {
+                        isAppearanceLightStatusBars = !night
+                        isAppearanceLightNavigationBars = !night
+                    }
                 }
+                OraeApp(start)
             }
-            OraeApp(start)
         }
     }
 }
